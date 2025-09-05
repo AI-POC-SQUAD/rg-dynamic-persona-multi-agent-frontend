@@ -74,7 +74,7 @@ class ApiClient {
       
       // Send the message as JSON object expected by the backend
       final requestBody = jsonEncode({
-        'message': message,
+        'query': message,
       });
 
       final response = await http.post(
