@@ -36,11 +36,11 @@ steps:
 
 # Substitution variables with defaults
 substitutions:
-  _REGION: 'us-central1'
+  _REGION: 'europe-west9'
   _REPO: 'dynamic-persona-frontend'
-  _SERVICE: 'dynamic-persona-frontend'
+  _SERVICE: 'rg-dynamic-persona-frontend'
   _APP_PUBLIC_PATH: '/'
-  _BACKEND_BASE_URL: '/api'
+  _BACKEND_BASE_URL: 'https://rg-dynamic-persona-auth-proxy-1036279278510.europe-west9.run.app'
   _IAP_MODE: 'false'
   _IAP_AUDIENCE: ''
   _AUTH_MODE: 'none'
