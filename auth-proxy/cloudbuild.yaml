@@ -4,9 +4,9 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${COMMIT_SHA}',
       '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest',
-      './auth-proxy'
+      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}',
+      '.'
     ]
 
   # Push image to Artifact Registry
@@ -22,7 +22,7 @@ steps:
     entrypoint: 'gcloud'
     args: [
       'run', 'deploy', '${_SERVICE}',
-      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${COMMIT_SHA}',
+      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}',
       '--region', '${_REGION}',
       '--platform', 'managed',
       '--port', '8080',
