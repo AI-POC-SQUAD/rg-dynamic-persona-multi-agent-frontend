@@ -1,0 +1,59 @@
+# Dart and Flutter
+**/.*
+**/.dart_tool/
+**/.packages
+**/build/
+**/pubspec.lock
+
+# Platform folders not needed for web
+**/android/
+**/ios/
+**/linux/
+**/macos/
+**/windows/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+**/.vscode/
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Node.js (if using for tooling)
+**/node_modules/
+**/npm-debug.log
+**/yarn-error.log
+
+# Build artifacts and cache
+**/dist/
+**/tmp/
+**/.cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.sample
+
+# Logs
+**/*.log
+
+# Coverage reports
+**/coverage/
+
+# Documentation build artifacts
+**/site/
+
+# Temporary files
+**/*.tmp
+**/*.temp
+**/*.swp
+**/*.swo
+**/*~
