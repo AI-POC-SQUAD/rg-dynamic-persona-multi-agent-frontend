@@ -1,0 +1,53 @@
+# Cloud Build configuration for auth proxy
+steps:
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${COMMIT_SHA}',
+      '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest',
+      './auth-proxy'
+    ]
+
+  # Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      '--all-tags',
+      '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}'
+    ]
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', '${_SERVICE}',
+      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${COMMIT_SHA}',
+      '--region', '${_REGION}',
+      '--platform', 'managed',
+      '--port', '8080',
+      '--allow-unauthenticated',
+      '--set-env-vars', 'BACKEND_URL=${_BACKEND_URL}',
+      '--memory', '${_MEMORY}',
+      '--cpu', '${_CPU}',
+      '--timeout', '${_TIMEOUT}',
+      '--max-instances', '${_MAX_INSTANCES}',
+      '--min-instances', '0'
+    ]
+
+# Substitution variables with defaults
+substitutions:
+  _REGION: 'europe-west9'
+  _REPO: 'dynamic-persona-frontend'
+  _SERVICE: 'rg-dynamic-persona-auth-proxy'
+  _BACKEND_URL: 'https://rg-dynamic-persona-1036279278510.europe-west9.run.app'
+  _MAX_INSTANCES: '5'
+  _MEMORY: '256Mi'
+  _CPU: '1'
+  _TIMEOUT: '60'
+
+# Timeout for the entire build
+timeout: '600s'
+
+# Build tags
+tags: ['auth-proxy', 'rg-dynamic-persona']
