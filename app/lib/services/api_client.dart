@@ -48,7 +48,7 @@ class ApiClient {
       final url = '$backendBaseUrl/chat';
       
       final headers = <String, String>{
-        'Content-Type': 'text/plain',
+        'Content-Type': 'application/json',
       };
 
       // Add authentication based on configuration
@@ -72,13 +72,15 @@ class ApiClient {
         print('Warning: No authentication configured for API calls');
       }
       
-      // Send the message as a GraphQL sentence in natural language (plain text)
-      final body = message;
+      // Send the message as JSON object expected by the backend
+      final requestBody = jsonEncode({
+        'message': message,
+      });
 
       final response = await http.post(
         Uri.parse(url),
         headers: headers,
-        body: body,
+        body: requestBody,
       );
 
       if (response.statusCode == 200) {
