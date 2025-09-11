@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:html' as html;
 import 'dart:js' as js;
 import 'package:http/http.dart' as http;
 
@@ -43,7 +42,7 @@ class ApiClient {
   }
 
   /// Send a chat message to the backend
-  Future<String> sendChatMessage(String message) async {
+  Future<Map<String, dynamic>> sendChatMessage(String message, String userId) async {
     try {
       final url = '$backendBaseUrl/chat';
       
@@ -75,6 +74,7 @@ class ApiClient {
       // Send the message as JSON object expected by the backend
       final requestBody = jsonEncode({
         'query': message,
+        'user_id': userId,
       });
 
       final response = await http.post(
@@ -85,7 +85,7 @@ class ApiClient {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        return responseData['answer'] ?? responseData['response'] ?? responseData['message'] ?? 'No response from server';
+        return responseData;
       } else if (response.statusCode == 401) {
         throw Exception('Authentication failed. Please check your token or sign in.');
       } else if (response.statusCode == 403) {
