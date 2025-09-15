@@ -39,6 +39,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final ApiClient _apiClient = ApiClient();
   final ConversationManager _conversationManager = ConversationManager();
   bool _isLoading = false;
@@ -64,6 +65,19 @@ class _ChatPageState extends State<ChatPage> {
     if (_conversationManager.conversations.isEmpty) {
       _conversationManager.createConversation(title: 'Welcome Chat');
     }
+  }
+
+  void _scrollToBottom() {
+    // Use a small delay to ensure the ListView has been updated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _sendMessage() async {
@@ -100,8 +114,23 @@ class _ChatPageState extends State<ChatPage> {
       _isLoading = true;
     });
 
+    // Auto-scroll to bottom after adding user message and showing loader
+    _scrollToBottom();
+
     try {
-      final response = await _apiClient.sendChatMessage(userMessage, userId);
+      final currentConversation = _conversationManager.currentConversation;
+      
+      // Prepare conversation history for backend context
+      final conversationHistory = currentConversation != null 
+          ? ApiClient.formatConversationHistory(currentConversation.messages)
+          : <Map<String, dynamic>>[];
+
+      final response = await _apiClient.sendChatMessage(
+        userMessage, 
+        userId,
+        conversationId: currentConversation?.id,
+        conversationHistory: conversationHistory,
+      );
       
       // Extract answer and session_id from response
       final answerText = response['answer'] ?? response['response'] ?? response['message'] ?? 'No response from server';
@@ -115,6 +144,9 @@ class _ChatPageState extends State<ChatPage> {
       );
       
       _conversationManager.addMessageToCurrentConversation(botChatMessage);
+      
+      // Auto-scroll to bottom after adding bot response
+      _scrollToBottom();
       
       // Update conversation title if it's still the default and we have messages
       final conversation = _conversationManager.currentConversation;
@@ -141,6 +173,9 @@ class _ChatPageState extends State<ChatPage> {
         isError: true,
       );
       _conversationManager.addMessageToCurrentConversation(errorMessage);
+      
+      // Auto-scroll to bottom after adding error message
+      _scrollToBottom();
     } finally {
       setState(() {
         _isLoading = false;
@@ -156,12 +191,18 @@ class _ChatPageState extends State<ChatPage> {
       isError: true,
     );
     _conversationManager.addMessageToCurrentConversation(errorMessage);
+    
+    // Auto-scroll to bottom after adding error message
+    _scrollToBottom();
   }
 
   void _onConversationSelected(String conversationId) {
     _conversationManager.switchToConversation(conversationId);
     setState(() {});
     Navigator.of(context).pop(); // Close drawer
+    
+    // Auto-scroll to bottom when switching conversations
+    _scrollToBottom();
   }
 
   void _onNewConversation() {
@@ -216,6 +257,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: messages.length,
               itemBuilder: (context, index) {
@@ -291,6 +333,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

@@ -41,8 +41,14 @@ class ApiClient {
     return config?['IAP_MODE'] == true;
   }
 
-  /// Send a chat message to the backend
-  Future<Map<String, dynamic>> sendChatMessage(String message, String userId) async {
+  /// Send a chat message to the backend with conversation context
+  Future<Map<String, dynamic>> sendChatMessage(
+    String message, 
+    String userId, {
+    String? conversationId,
+    List<Map<String, dynamic>>? conversationHistory,
+    int maxHistoryMessages = 10,
+  }) async {
     try {
       final url = '$backendBaseUrl/chat';
       
@@ -71,11 +77,39 @@ class ApiClient {
         print('Warning: No authentication configured for API calls');
       }
       
-      // Send the message as JSON object expected by the backend
-      final requestBody = jsonEncode({
+      // Prepare conversation history for backend context (recent messages only)
+      final limitedHistory = conversationHistory != null && conversationHistory.isNotEmpty
+          ? conversationHistory.take(maxHistoryMessages).toList()
+          : <Map<String, dynamic>>[];
+
+      // Build request payload with conversation context
+      final requestPayload = <String, dynamic>{
         'query': message,
         'user_id': userId,
-      });
+      };
+
+      // Add conversation context if available
+      if (conversationId != null) {
+        requestPayload['conversation_id'] = conversationId;
+      }
+      
+      if (limitedHistory.isNotEmpty) {
+        requestPayload['context'] = limitedHistory;
+      }
+
+      final requestBody = jsonEncode(requestPayload);
+
+      // Debug logging to verify the payload
+      print('🚀 Sending chat request to: $url');
+      print('📝 Query: $message');
+      print('👤 User ID: $userId');
+      print('💬 Conversation ID: ${requestPayload['conversation_id'] ?? 'None'}');
+      print('📚 Context messages: ${limitedHistory.length}');
+      if (limitedHistory.isNotEmpty) {
+        final lastContent = limitedHistory.last['content']?.toString() ?? '';
+        final preview = lastContent.length > 50 ? '${lastContent.substring(0, 50)}...' : lastContent;
+        print('📖 Latest context: $preview');
+      }
 
       final response = await http.post(
         Uri.parse(url),
@@ -100,6 +134,22 @@ class ApiClient {
       }
       rethrow;
     }
+  }
+
+  /// Convert conversation messages to backend-compatible format
+  static List<Map<String, dynamic>> formatConversationHistory(List<dynamic> messages) {
+    return messages.map((msg) {
+      // Ensure we have the required fields with safe type casting
+      final text = msg.text?.toString() ?? '';
+      final isUser = msg.isUser == true;
+      final timestamp = msg.timestamp?.toIso8601String() ?? DateTime.now().toIso8601String();
+      
+      return {
+        'role': isUser ? 'user' : 'assistant',
+        'content': text,
+        'timestamp': timestamp,
+      };
+    }).where((msg) => (msg['content'] as String).isNotEmpty).toList();
   }
 
   /// Health check endpoint
