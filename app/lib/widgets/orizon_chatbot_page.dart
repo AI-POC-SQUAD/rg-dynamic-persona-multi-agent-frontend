@@ -196,48 +196,50 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
   Widget _buildSegmentSelection() {
     return SafeArea(
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'ORIZON',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black,
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'ORIZON',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      _buildHeaderIcon(Icons.assignment),
-                      const SizedBox(width: 12),
-                      _buildHeaderIcon(Icons.person),
-                    ],
-                  ),
-                ],
-              ),
+                    Row(
+                      children: [
+                        _buildHeaderIcon(Icons.assignment),
+                        const SizedBox(width: 12),
+                        _buildHeaderIcon(Icons.person),
+                      ],
+                    ),
+                  ],
+                ),
 
-              const SizedBox(height: 80),
+                const SizedBox(height: 60),
 
-              // Title Section
-              const Center(
-                child: Column(
+                // Title Section
+                const Column(
                   children: [
                     Text(
                       'Select a customer segment',
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: 28,
                         fontWeight: FontWeight.normal,
                         fontFamily: 'NouvelR',
                         color: Colors.black,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8),
                     Text(
@@ -251,43 +253,45 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 60),
+                const SizedBox(height: 100),
 
-              // Customer Segments
-              Center(
-                child: Wrap(
-                  spacing: 20,
-                  runSpacing: 20,
-                  alignment: WrapAlignment.center,
-                  children: _segments
-                      .map((segment) => _buildSegmentCard(segment))
-                      .toList(),
+                // Customer Segments - Horizontal Layout
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (int i = 0; i < _segments.length; i++) ...[
+                        _buildSegmentCard(_segments[i]),
+                        if (i < _segments.length - 1) const SizedBox(width: 24),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 40),
+                const SizedBox(height: 30),
 
-              // Edit Icon
-              const Center(
-                child: Icon(
+                // Edit Icon
+                const Icon(
                   Icons.edit,
                   size: 15,
                   color: Color(0xFF535450),
                 ),
-              ),
 
-              const SizedBox(height: 80),
+                const SizedBox(height: 40),
 
-              // Chat Input Area
-              _buildChatInput(),
+                // Chat Input Area
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: _buildChatInput(),
+                ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Explorer text
-              const Center(
-                child: Row(
+                // Explorer text
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
@@ -305,8 +309,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -390,7 +394,12 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
         Container(
           color: const Color(0xFFE1DFE2),
           padding: const EdgeInsets.all(16),
-          child: _buildChatInput(),
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: _buildChatInput(),
+            ),
+          ),
         ),
       ],
     );
@@ -417,13 +426,16 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
     final isEnvironmentEvangelist = segment.id == 'environment_evangelists';
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Segment Button
         GestureDetector(
           onTap: () => _selectSegment(segment),
           child: Container(
-            height: isEnvironmentEvangelist ? 50 : 39,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            //height: isEnvironmentEvangelist ? 50 : 39,
+            height: 50,
+            constraints: const BoxConstraints(minWidth: 100, maxWidth: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: isSelected ? Colors.black : const Color(0xFFE1E1E3),
               borderRadius: BorderRadius.circular(24),
@@ -436,30 +448,35 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
               child: Text(
                 segment.name,
                 style: TextStyle(
-                  fontSize: isEnvironmentEvangelist ? 16 : 13,
+                  //fontSize: isEnvironmentEvangelist ? 14 : 11,
+                  fontSize: 14,
                   fontWeight: FontWeight.w300,
                   fontFamily: 'NouvelR',
                   color: isSelected ? Colors.white : Colors.black,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
         ),
 
+        const SizedBox(height: 16),
+
         // Connecting Line
-        if (segment.id != 'environment_evangelists')
-          Container(
-            height: 36,
-            width: 1,
-            color: const Color(0xFFE1DFE2),
-            margin: const EdgeInsets.symmetric(vertical: 8),
-          ),
+        Container(
+          height: 24,
+          width: 1,
+          color: const Color(0xFFE1DFE2),
+        ),
+
+        const SizedBox(height: 8),
 
         // Sphere/Icon
         Container(
-          width: 60,
-          height: 60,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: segment.id == 'environment_evangelists'
