@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Flutter web SPA
 # Stage 1: Build Flutter web application
-FROM cirrusci/flutter:stable AS build
+FROM ghcr.io/cirruslabs/flutter:3.35.3 AS build
 
 # Set working directory
 WORKDIR /app

@@ -23,14 +23,19 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Add assets here if needed
-  # assets:
-  #   - images/
+  # Add assets here for the new Orizon UI
+  assets:
+    - assets/
 
-  # Add fonts here if needed
+  # Custom fonts for the Orizon design (commented out until font files are available)
   # fonts:
-  #   - family: Schyler
+  #   - family: NouvelR
   #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
+  #       - asset: fonts/NouvelR-Regular.ttf
+  #         weight: 400
+  #       - asset: fonts/NouvelR-Light.ttf
+  #         weight: 300
+  #       - asset: fonts/NouvelR-Book.ttf
+  #         weight: 500
+  #       - asset: fonts/NouvelR-Bold.ttf
+  #         weight: 700
