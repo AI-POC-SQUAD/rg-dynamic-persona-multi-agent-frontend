@@ -11,7 +11,8 @@ class OrizonChatBotPage extends StatefulWidget {
   State<OrizonChatBotPage> createState() => _OrizonChatBotPageState();
 }
 
-class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
+class _OrizonChatBotPageState extends State<OrizonChatBotPage>
+    with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ApiClient _apiClient = ApiClient();
@@ -23,9 +24,43 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
   bool _hasStartedConversation = false;
   String _selectedOptionMode = 'chat'; // 'chat', 'tree', 'chart'
 
+  // Animation controllers
+  late AnimationController _screenTransitionController;
+  late AnimationController _iconTransitionController;
+  late Animation<double> _screenSlideAnimation;
+  late Animation<double> _screenFadeAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize animation controllers
+    _screenTransitionController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _iconTransitionController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _screenSlideAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _screenTransitionController,
+      curve: Curves.easeInOut,
+    ));
+
+    _screenFadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _screenTransitionController,
+      curve: Curves.easeInOut,
+    ));
+
     _loadRuntimeConfig();
     _initializeConversation();
   }
@@ -55,8 +90,11 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
   }
 
   void _selectOptionMode(String mode) {
-    setState(() {
-      _selectedOptionMode = mode;
+    _iconTransitionController.forward().then((_) {
+      setState(() {
+        _selectedOptionMode = mode;
+      });
+      _iconTransitionController.reverse();
     });
     // You can add specific logic for each mode here
     print('Selected option mode: $mode');
@@ -65,8 +103,12 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
   void _startConversation() {
     if (_selectedSegment == null) return;
 
-    setState(() {
-      _hasStartedConversation = true;
+    // Start screen transition animation
+    _screenTransitionController.forward().then((_) {
+      setState(() {
+        _hasStartedConversation = true;
+      });
+      _screenTransitionController.reset();
     });
 
     // Add initial system message about the selected segment
@@ -197,8 +239,29 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
-      body:
-          _hasStartedConversation ? _buildChatView() : _buildSegmentSelection(),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 600),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            )),
+            child: FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+          );
+        },
+        child: _hasStartedConversation
+            ? Container(key: const ValueKey('chat'), child: _buildChatView())
+            : Container(
+                key: const ValueKey('segments'),
+                child: _buildSegmentSelection()),
+      ),
     );
   }
 
@@ -450,10 +513,12 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Segment Button
+        // Segment Button with animation
         GestureDetector(
           onTap: () => _selectSegment(segment),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
             height: 50,
             constraints: const BoxConstraints(minWidth: 100, maxWidth: 160),
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -464,19 +529,31 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
                 color: const Color(0xFFC4C4C4),
                 width: 0.5,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: Center(
-              child: Text(
-                segment.name,
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 300),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w300,
                   fontFamily: 'NouvelR',
                   color: isSelected ? Colors.white : Colors.black,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  segment.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ),
@@ -794,6 +871,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _screenTransitionController.dispose();
+    _iconTransitionController.dispose();
     super.dispose();
   }
 }
