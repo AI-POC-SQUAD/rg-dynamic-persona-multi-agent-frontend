@@ -22,7 +22,12 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   CustomerSegment? _selectedSegment;
   bool _isLoading = false;
   bool _hasStartedConversation = false;
+  bool _showPersonPanel = false;
   String _selectedOptionMode = 'chat'; // 'chat', 'tree', 'chart'
+
+  // Slider values for persona criteria
+  double _ruralUrbanSliderValue = 0.6;
+  double _poorRichSliderValue = 0.4;
 
   // Animation controllers
   late AnimationController _screenTransitionController;
@@ -221,22 +226,31 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            ),
-            child: child,
-          );
-        },
-        child: _hasStartedConversation
-            ? Container(key: const ValueKey('chat'), child: _buildChatView())
-            : Container(
-                key: const ValueKey('segments'),
-                child: _buildSegmentSelection()),
+      body: Stack(
+        children: [
+          // Main content
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                ),
+                child: child,
+              );
+            },
+            child: _hasStartedConversation
+                ? Container(
+                    key: const ValueKey('chat'), child: _buildChatView())
+                : Container(
+                    key: const ValueKey('segments'),
+                    child: _buildSegmentSelection()),
+          ),
+
+          // Person Panel Overlay
+          if (_showPersonPanel) _buildPersonPanel(),
+        ],
       ),
     );
   }
@@ -504,17 +518,27 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   }
 
   Widget _buildHeaderIcon(IconData icon) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFFFFF),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        icon,
-        size: 26,
-        color: const Color(0xFF535450),
+    return GestureDetector(
+      onTap: () {
+        if (icon == Icons.person) {
+          setState(() {
+            _showPersonPanel = !_showPersonPanel;
+          });
+        }
+        // Handle other icons if needed
+      },
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: const BoxDecoration(
+          color: Color(0xFFFFFFFF),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: 26,
+          color: const Color(0xFF535450),
+        ),
       ),
     );
   }
@@ -1219,6 +1243,301 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         }
       }
     }
+  }
+
+  // Person Panel Widget with Figma Design
+  Widget _buildPersonPanel() {
+    return Positioned(
+      right: 0,
+      top: 0,
+      bottom: 0,
+      child: Material(
+        elevation: 0,
+        shadowColor: Colors.black.withValues(alpha: 0.25),
+        child: Container(
+          width: 432,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x40000000),
+                blurRadius: 65,
+                offset: Offset(-10, 0),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with back button and title
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _showPersonPanel = false;
+                          });
+                        },
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE1DFE2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            size: 24,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          _selectedSegment?.name ?? 'Environment evangelists',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Description text
+                  Text(
+                    "I'm skeptical of EVs; for me, it's all about the range. I mainly use my car for daily errands.",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'NouvelR',
+                      color: Colors.black,
+                      height: 1.4,
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Sources section
+                  const Text(
+                    'Sources',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'NouvelR',
+                      color: Colors.black,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Source cards
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      _buildSourceCard('CMI', true),
+                      _buildSourceCard('CMI', true),
+                      _buildSourceCard('PERSO', false),
+                      _buildSourceCard('GOOGLE', true),
+                      _buildAddSourceCard(),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Adjust persona criteria section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Adjust persona criteria',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          // Reset functionality
+                          setState(() {
+                            _ruralUrbanSliderValue = 0.6;
+                            _poorRichSliderValue = 0.4;
+                          });
+                        },
+                        child: const Text(
+                          'Reset',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'NouvelR',
+                            color: Color(0xFF535450),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Sliders
+                  _buildSlider('Rural', 'Urbain', _ruralUrbanSliderValue,
+                      (value) {
+                    setState(() {
+                      _ruralUrbanSliderValue = value;
+                    });
+                  }),
+                  const SizedBox(height: 24),
+                  _buildSlider('Poor', 'Rich', _poorRichSliderValue, (value) {
+                    setState(() {
+                      _poorRichSliderValue = value;
+                    });
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceCard(String label, bool isActive) {
+    return Container(
+      width: 74,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFE1E1E3),
+          width: 1,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Main card content
+          Positioned.fill(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+
+          // Top-right corner indicator
+          if (isActive)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(8),
+                    bottomLeft: Radius.circular(8),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.lock,
+                  size: 10,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddSourceCard() {
+    return GestureDetector(
+      onTap: () {
+        // Add source functionality
+        print('Add new source');
+      },
+      child: Container(
+        width: 74,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: const Color(0xFFE1E1E3),
+            width: 1,
+          ),
+        ),
+        child: const Icon(
+          Icons.add,
+          size: 24,
+          color: Color(0xFF535450),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlider(String leftLabel, String rightLabel, double value,
+      ValueChanged<double> onChanged) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              leftLabel,
+              style: const TextStyle(
+                fontSize: 14,
+                fontFamily: 'NouvelR',
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              rightLabel,
+              style: const TextStyle(
+                fontSize: 14,
+                fontFamily: 'NouvelR',
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: Colors.black,
+            inactiveTrackColor: const Color(0xFFE1E1E3),
+            thumbColor: Colors.black,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            trackHeight: 2,
+          ),
+          child: Slider(
+            value: value,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
