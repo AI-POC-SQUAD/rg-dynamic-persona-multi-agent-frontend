@@ -650,8 +650,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
               const SizedBox(width: 12),
 
-              // Selected segment indicator with edit option
-              if (_selectedSegment != null)
+              // Selected segment indicator with edit option - only show after conversation started
+              if (_selectedSegment != null && _hasStartedConversation)
                 Expanded(
                   child: Container(
                     height: 32,
@@ -738,8 +738,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                     ),
                   ),
                 )
-              else
-                // Grouped option icons in pill container (when no segment selected)
+              else if (!_hasStartedConversation)
+                // Grouped option icons in pill container (when no conversation started)
                 Container(
                   height: 32,
                   decoration: BoxDecoration(
@@ -850,7 +850,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
               const Spacer(),
 
-              // Send Button (styled as "Go" button from Figma)
+              // Send Button - Arrow before first message, "Go" text after
               GestureDetector(
                 onTap: () {
                   if (!_hasStartedConversation && _selectedSegment != null) {
@@ -860,23 +860,31 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                 },
                 child: Container(
                   height: 32,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: !_hasStartedConversation ? 8 : 16,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF535450),
                     borderRadius: BorderRadius.circular(32),
                     border:
                         Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
                   ),
-                  child: const Center(
-                    child: Text(
-                      'Go',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontFamily: 'NouvelR',
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white,
-                      ),
-                    ),
+                  child: Center(
+                    child: !_hasStartedConversation
+                        ? const Icon(
+                            Icons.keyboard_arrow_up,
+                            size: 20,
+                            color: Colors.white,
+                          )
+                        : const Text(
+                            'Go',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontFamily: 'NouvelR',
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ),
