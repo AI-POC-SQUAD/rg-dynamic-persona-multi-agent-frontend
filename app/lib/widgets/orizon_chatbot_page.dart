@@ -27,8 +27,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   // Animation controllers
   late AnimationController _screenTransitionController;
   late AnimationController _iconTransitionController;
-  late Animation<double> _screenSlideAnimation;
-  late Animation<double> _screenFadeAnimation;
 
   @override
   void initState() {
@@ -44,22 +42,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-
-    _screenSlideAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _screenTransitionController,
-      curve: Curves.easeInOut,
-    ));
-
-    _screenFadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _screenTransitionController,
-      curve: Curves.easeInOut,
-    ));
 
     _loadRuntimeConfig();
     _initializeConversation();
@@ -407,87 +389,98 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     final currentConversation = _conversationManager.currentConversation;
     final messages = currentConversation?.messages ?? [];
 
-    return Column(
-      children: [
-        // Header
-        Container(
-          color: const Color(0xFFE1DFE2),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: SafeArea(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _hasStartedConversation = false;
-                        });
-                      },
-                      icon: const Icon(Icons.arrow_back),
-                    ),
-                    const Text(
-                      'ORIZON',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                if (_selectedSegment != null)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _selectedSegment!.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-
-        // Messages
-        Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(16),
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              return _buildChatMessage(messages[index]);
-            },
-          ),
-        ),
-
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: CircularProgressIndicator(),
-          ),
-
-        // Chat Input
-        Container(
-          color: const Color(0xFFE1DFE2),
-          padding: const EdgeInsets.all(16),
-          child: Center(
+    return Scaffold(
+      backgroundColor: const Color(0xFFE1DFE2),
+      body: Column(
+        children: [
+          // Header with centered ORIZON title and action buttons
+          SafeArea(
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: _buildChatInput(),
+              width: double.infinity,
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Back button and ORIZON title
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _hasStartedConversation = false;
+                          });
+                        },
+                        icon: const Icon(Icons.arrow_back, color: Colors.black),
+                        splashRadius: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'ORIZON',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Assignment and Person buttons (keeping as requested)
+                  Row(
+                    children: [
+                      _buildHeaderIcon(Icons.assignment),
+                      const SizedBox(width: 12),
+                      _buildHeaderIcon(Icons.person),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+
+          // Messages with centered layout
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      return _buildChatMessage(messages[index]);
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Loading indicator
+          if (_isLoading)
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: const CircularProgressIndicator(
+                color: Color(0xFF535450),
+              ),
+            ),
+
+          // Chat Input with centered layout
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: _buildChatInput(),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -596,6 +589,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E3E8)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -607,17 +601,24 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // First line: "Ask ORIZON" placeholder text
+          // Text input field
           TextField(
             controller: _messageController,
+            maxLines: null,
             decoration: const InputDecoration(
               hintText: 'Ask ORIZON',
               hintStyle: TextStyle(
                 fontSize: 16,
                 color: Color(0xFF8F9893),
+                fontFamily: 'NouvelR',
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
+            ),
+            style: const TextStyle(
+              fontSize: 16,
+              fontFamily: 'NouvelR',
+              color: Colors.black,
             ),
             onSubmitted: (_) {
               if (!_hasStartedConversation && _selectedSegment != null) {
@@ -629,156 +630,227 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
           const SizedBox(height: 16),
 
-          // Second line: All icons
+          // Bottom row with icons and segment selector
           Row(
             children: [
               // Attachment Icon
               Container(
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 decoration: const BoxDecoration(
                   color: Color(0xFFE1E1E3),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.attach_file,
-                  size: 18,
+                  size: 15,
                   color: Color(0xFF535450),
                 ),
               ),
 
               const SizedBox(width: 12),
 
-              // Grouped option icons in pill container
-              Container(
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7F7F7),
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(color: const Color(0xFFE2E3E8)),
+              // Selected segment indicator with edit option
+              if (_selectedSegment != null)
+                Expanded(
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F7F7),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: const Color(0xFFE2E3E8)),
+                    ),
+                    child: Row(
+                      children: [
+                        // Segment indicator with colored circle
+                        Container(
+                          width: 28,
+                          height: 28,
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: _selectedSegment!.id ==
+                                        'environment_evangelists'
+                                    ? const RadialGradient(
+                                        colors: [
+                                          Color(0xFFFF6B6B),
+                                          Color(0xFF4ECDC4)
+                                        ],
+                                      )
+                                    : null,
+                                color: _selectedSegment!.id !=
+                                        'environment_evangelists'
+                                    ? const Color(0xFF4ECDC4)
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        // Segment name
+                        Expanded(
+                          child: Text(
+                            _selectedSegment!.name,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontFamily: 'NouvelR',
+                              fontWeight: FontWeight.w300,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        // Edit icon
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _hasStartedConversation = false;
+                            });
+                          },
+                          child: const Icon(
+                            Icons.edit,
+                            size: 15,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                // Grouped option icons in pill container (when no segment selected)
+                Container(
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F7F7),
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: const Color(0xFFE2E3E8)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Chat bubble icon
+                      GestureDetector(
+                        onTap: () => _selectOptionMode('chat'),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: _selectedOptionMode == 'chat'
+                                ? Colors.white
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            boxShadow: _selectedOptionMode == 'chat'
+                                ? [
+                                    const BoxShadow(
+                                      color: Color(0x1A000000),
+                                      blurRadius: 2,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 14,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      // Tree icon
+                      GestureDetector(
+                        onTap: () => _selectOptionMode('tree'),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: _selectedOptionMode == 'tree'
+                                ? Colors.white
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            boxShadow: _selectedOptionMode == 'tree'
+                                ? [
+                                    const BoxShadow(
+                                      color: Color(0x1A000000),
+                                      blurRadius: 2,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: const Icon(
+                            Icons.account_tree_outlined,
+                            size: 14,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      // Bar chart icon
+                      GestureDetector(
+                        onTap: () => _selectOptionMode('chart'),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          margin: const EdgeInsets.only(
+                              right: 4, top: 2, bottom: 2, left: 2),
+                          decoration: BoxDecoration(
+                            color: _selectedOptionMode == 'chart'
+                                ? Colors.white
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            boxShadow: _selectedOptionMode == 'chart'
+                                ? [
+                                    const BoxShadow(
+                                      color: Color(0x1A000000),
+                                      blurRadius: 2,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: const Icon(
+                            Icons.bar_chart,
+                            size: 14,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Chat bubble icon
-                    GestureDetector(
-                      onTap: () => _selectOptionMode('chat'),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: _selectedOptionMode == 'chat'
-                              ? Colors.white
-                              : Colors.transparent,
-                          shape: BoxShape.circle,
-                          boxShadow: _selectedOptionMode == 'chat'
-                              ? [
-                                  const BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 2,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: const Icon(
-                          Icons.chat_bubble_outline,
-                          size: 16,
-                          color: Color(0xFF535450),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Tree icon
-                    GestureDetector(
-                      onTap: () => _selectOptionMode('tree'),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: _selectedOptionMode == 'tree'
-                              ? Colors.white
-                              : Colors.transparent,
-                          shape: BoxShape.circle,
-                          boxShadow: _selectedOptionMode == 'tree'
-                              ? [
-                                  const BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 2,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: const Icon(
-                          Icons.account_tree_outlined,
-                          size: 16,
-                          color: Color(0xFF535450),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Bar chart icon
-                    GestureDetector(
-                      onTap: () => _selectOptionMode('chart'),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        margin: const EdgeInsets.only(
-                            right: 4, top: 2, bottom: 2, left: 2),
-                        decoration: BoxDecoration(
-                          color: _selectedOptionMode == 'chart'
-                              ? Colors.white
-                              : Colors.transparent,
-                          shape: BoxShape.circle,
-                          boxShadow: _selectedOptionMode == 'chart'
-                              ? [
-                                  const BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 2,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: const Icon(
-                          Icons.bar_chart,
-                          size: 16,
-                          color: Color(0xFF535450),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
               const Spacer(),
 
-              // Voice input icon
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7F7F7),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE2E3E8)),
-                ),
-                child: const Icon(
-                  Icons.mic,
-                  size: 18,
-                  color: Color(0xFF535450),
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Send Button
+              // Send Button (styled as "Go" button from Figma)
               GestureDetector(
                 onTap: () {
                   if (!_hasStartedConversation && _selectedSegment != null) {
@@ -787,16 +859,24 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                   _sendMessage();
                 },
                 child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF535450),
-                    shape: BoxShape.circle,
+                  height: 32,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF535450),
+                    borderRadius: BorderRadius.circular(32),
+                    border:
+                        Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
                   ),
-                  child: const Icon(
-                    Icons.keyboard_arrow_up,
-                    size: 20,
-                    color: Colors.white,
+                  child: const Center(
+                    child: Text(
+                      'Go',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'NouvelR',
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -808,63 +888,310 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   }
 
   Widget _buildChatMessage(ChatMessage message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Align(
-        alignment:
-            message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.7,
-          ),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: message.isError
-                ? Colors.red.shade100
-                : message.isUser
-                    ? const Color(0xFF535450)
-                    : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              if (!message.isUser)
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-            ],
-          ),
-          child: Column(
+    final isUser = message.isUser;
+    final isError = message.isError;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Message bubble with avatar and connecting line
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment:
+                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              Text(
-                message.text,
-                style: TextStyle(
-                  color: message.isError
-                      ? Colors.red.shade700
-                      : message.isUser
-                          ? Colors.white
-                          : Colors.black,
+              if (!isUser) ...[
+                // Bot avatar with connecting line
+                Column(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE1E1E3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 12,
+                        color: Color(0xFF535450),
+                      ),
+                    ),
+                    // Connecting line
+                    Container(
+                      width: 1,
+                      height: 74,
+                      margin: const EdgeInsets.only(right: 12),
+                      color: const Color(0xFFE1DFE2),
+                    ),
+                  ],
+                ),
+              ],
+
+              // Message content with gradient background
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.65,
+                    minWidth: 200,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: isUser
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      // Customer segment label for bot messages
+                      if (!isUser && _selectedSegment != null)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 8, left: 20),
+                          child: Text(
+                            '${_selectedSegment!.name} - Rural',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFF6D6F72),
+                              fontFamily: 'NouvelR',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+
+                      // Message bubble with gradient background
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          // Gradient background for message bubbles matching Figma
+                          gradient: isError
+                              ? null
+                              : isUser
+                                  ? null
+                                  : const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0xFFF8F8F8),
+                                        Color(0xFFFFFFFF),
+                                      ],
+                                    ),
+                          color: isError
+                              ? Colors.red.shade100
+                              : isUser
+                                  ? Colors.transparent
+                                  : null,
+                          borderRadius: BorderRadius.circular(24),
+                          border: !isUser && !isError
+                              ? Border.all(
+                                  color: const Color(0xFFE2E3E8), width: 1)
+                              : null,
+                          boxShadow: [
+                            if (!isUser && !isError)
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Message text with proper formatting
+                            RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'NouvelR',
+                                  fontWeight: FontWeight.w400,
+                                  color: isError
+                                      ? Colors.red.shade700
+                                      : isUser
+                                          ? Colors.black
+                                          : Colors.black,
+                                  height: 1.5,
+                                ),
+                                children: _parseMessageText(
+                                    message.text, isUser, isError),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Action buttons for bot messages
+                      if (!isUser && !isError)
+                        Container(
+                          margin: const EdgeInsets.only(top: 12, left: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.exit_to_app,
+                                label: 'Sources',
+                                onTap: () => _showSources(message),
+                              ),
+                              const SizedBox(width: 20),
+                              _buildActionButton(
+                                icon: Icons.content_copy,
+                                label: 'Copy',
+                                onTap: () => _copyMessage(message.text),
+                              ),
+                              const SizedBox(width: 20),
+                              _buildActionButton(
+                                icon: Icons.refresh,
+                                label: 'Try again',
+                                onTap: () => _retryLastMessage(),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: message.isError
-                      ? Colors.red.shade500
-                      : message.isUser
-                          ? Colors.white70
-                          : Colors.grey.shade600,
+
+              if (isUser) ...[
+                // User avatar with connecting line
+                Column(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      margin: const EdgeInsets.only(left: 12),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE1E1E3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 12,
+                        color: Color(0xFF535450),
+                      ),
+                    ),
+                    // Connecting line for user
+                    Container(
+                      width: 1,
+                      height: 40,
+                      margin: const EdgeInsets.only(left: 12),
+                      color: const Color(0xFFE1DFE2),
+                    ),
+                  ],
                 ),
-              ),
+              ],
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to parse text with bold formatting
+  List<TextSpan> _parseMessageText(String text, bool isUser, bool isError) {
+    final List<TextSpan> spans = [];
+    final RegExp boldPattern = RegExp(r'\*\*(.*?)\*\*');
+    int lastEnd = 0;
+
+    for (final match in boldPattern.allMatches(text)) {
+      // Add text before the bold part
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+        ));
+      }
+
+      // Add bold text
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontFamily: 'NouvelR',
+          color: isError
+              ? Colors.red.shade700
+              : isUser
+                  ? Colors.black
+                  : Colors.black,
+        ),
+      ));
+
+      lastEnd = match.end;
+    }
+
+    // Add remaining text
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastEnd),
+      ));
+    }
+
+    // If no bold text was found, return the whole text
+    if (spans.isEmpty) {
+      spans.add(TextSpan(text: text));
+    }
+
+    return spans;
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: const Color(0xFF535450),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Color(0xFF535450),
+                fontFamily: 'NouvelR',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  void _showSources(ChatMessage message) {
+    // Implement source viewing functionality
+    print('Show sources for: ${message.text}');
+  }
+
+  void _copyMessage(String text) {
+    // Implement copy functionality
+    print('Copy message: $text');
+    // You can use package:flutter/services.dart Clipboard.setData() here
+  }
+
+  void _retryLastMessage() {
+    // Implement retry functionality
+    print('Retry last message');
+    final currentConversation = _conversationManager.currentConversation;
+    if (currentConversation != null &&
+        currentConversation.messages.isNotEmpty) {
+      // Find the last user message and resend it
+      for (int i = currentConversation.messages.length - 1; i >= 0; i--) {
+        final msg = currentConversation.messages[i];
+        if (msg.isUser) {
+          _messageController.text = msg.text;
+          _sendMessage();
+          break;
+        }
+      }
+    }
   }
 
   @override
