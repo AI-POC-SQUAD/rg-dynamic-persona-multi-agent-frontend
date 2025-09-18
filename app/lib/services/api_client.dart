@@ -19,7 +19,8 @@ class ApiClient {
           'IAP_MODE': jsConfig['IAP_MODE'] ?? false,
           'IAP_AUDIENCE': jsConfig['IAP_AUDIENCE'] ?? '',
           'AUTH_MODE': jsConfig['AUTH_MODE'] ?? 'none', // none, bearer, iap
-          'BEARER_TOKEN': jsConfig['BEARER_TOKEN'] ?? '', // For Cloud Run IAM auth
+          'BEARER_TOKEN':
+              jsConfig['BEARER_TOKEN'] ?? '', // For Cloud Run IAM auth
         };
       }
     } catch (e) {
@@ -43,7 +44,7 @@ class ApiClient {
 
   /// Send a chat message to the backend with conversation context
   Future<Map<String, dynamic>> sendChatMessage(
-    String message, 
+    String message,
     String userId, {
     String? conversationId,
     List<Map<String, dynamic>>? conversationHistory,
@@ -51,7 +52,7 @@ class ApiClient {
   }) async {
     try {
       final url = '$backendBaseUrl/chat';
-      
+
       final headers = <String, String>{
         'Content-Type': 'application/json',
       };
@@ -62,8 +63,10 @@ class ApiClient {
       final bearerToken = config?['BEARER_TOKEN'];
       final authToken = config?['AUTH_TOKEN']; // Legacy support
       final iapMode = config?['IAP_MODE'] == true;
-      
-      if (authMode == 'bearer' && bearerToken != null && bearerToken.isNotEmpty) {
+
+      if (authMode == 'bearer' &&
+          bearerToken != null &&
+          bearerToken.isNotEmpty) {
         // Use bearer token authentication (preferred for Cloud Run IAM)
         headers['Authorization'] = 'Bearer $bearerToken';
       } else if (authToken != null && authToken.isNotEmpty) {
@@ -76,11 +79,12 @@ class ApiClient {
         // No authentication configured
         print('Warning: No authentication configured for API calls');
       }
-      
+
       // Prepare conversation history for backend context (recent messages only)
-      final limitedHistory = conversationHistory != null && conversationHistory.isNotEmpty
-          ? conversationHistory.take(maxHistoryMessages).toList()
-          : <Map<String, dynamic>>[];
+      final limitedHistory =
+          conversationHistory != null && conversationHistory.isNotEmpty
+              ? conversationHistory.take(maxHistoryMessages).toList()
+              : <Map<String, dynamic>>[];
 
       // Build request payload with conversation context
       final requestPayload = <String, dynamic>{
@@ -92,7 +96,7 @@ class ApiClient {
       if (conversationId != null) {
         requestPayload['conversation_id'] = conversationId;
       }
-      
+
       if (limitedHistory.isNotEmpty) {
         requestPayload['context'] = limitedHistory;
       }
@@ -103,11 +107,14 @@ class ApiClient {
       print('🚀 Sending chat request to: $url');
       print('📝 Query: $message');
       print('👤 User ID: $userId');
-      print('💬 Conversation ID: ${requestPayload['conversation_id'] ?? 'None'}');
+      print(
+          '💬 Conversation ID: ${requestPayload['conversation_id'] ?? 'None'}');
       print('📚 Context messages: ${limitedHistory.length}');
       if (limitedHistory.isNotEmpty) {
         final lastContent = limitedHistory.last['content']?.toString() ?? '';
-        final preview = lastContent.length > 50 ? '${lastContent.substring(0, 50)}...' : lastContent;
+        final preview = lastContent.length > 50
+            ? '${lastContent.substring(0, 50)}...'
+            : lastContent;
         print('📖 Latest context: $preview');
       }
 
@@ -121,35 +128,43 @@ class ApiClient {
         final responseData = jsonDecode(response.body);
         return responseData;
       } else if (response.statusCode == 401) {
-        throw Exception('Authentication failed. Please check your token or sign in.');
+        throw Exception(
+            'Authentication failed. Please check your token or sign in.');
       } else if (response.statusCode == 403) {
         throw Exception('Access forbidden. Check your permissions.');
       } else {
-        throw Exception('Server error: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Server error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       if (e.toString().contains('XMLHttpRequest')) {
         // Network/CORS error
-        throw Exception('Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
+        throw Exception(
+            'Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
       }
       rethrow;
     }
   }
 
   /// Convert conversation messages to backend-compatible format
-  static List<Map<String, dynamic>> formatConversationHistory(List<dynamic> messages) {
-    return messages.map((msg) {
-      // Ensure we have the required fields with safe type casting
-      final text = msg.text?.toString() ?? '';
-      final isUser = msg.isUser == true;
-      final timestamp = msg.timestamp?.toIso8601String() ?? DateTime.now().toIso8601String();
-      
-      return {
-        'role': isUser ? 'user' : 'assistant',
-        'content': text,
-        'timestamp': timestamp,
-      };
-    }).where((msg) => (msg['content'] as String).isNotEmpty).toList();
+  static List<Map<String, dynamic>> formatConversationHistory(
+      List<dynamic> messages) {
+    return messages
+        .map((msg) {
+          // Ensure we have the required fields with safe type casting
+          final text = msg.text?.toString() ?? '';
+          final isUser = msg.isUser == true;
+          final timestamp = msg.timestamp?.toIso8601String() ??
+              DateTime.now().toIso8601String();
+
+          return {
+            'role': isUser ? 'user' : 'assistant',
+            'content': text,
+            'timestamp': timestamp,
+          };
+        })
+        .where((msg) => (msg['content'] as String).isNotEmpty)
+        .toList();
   }
 
   /// Health check endpoint

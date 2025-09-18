@@ -4,8 +4,9 @@ import '../models/conversation.dart';
 
 class ConversationManager {
   static const String _storageKey = 'rg_dynamic_persona_conversations';
-  static const String _currentConversationKey = 'rg_dynamic_persona_current_conversation';
-  
+  static const String _currentConversationKey =
+      'rg_dynamic_persona_current_conversation';
+
   List<Conversation> _conversations = [];
   String? _currentConversationId;
 
@@ -16,7 +17,7 @@ class ConversationManager {
   // Getters
   List<Conversation> get conversations => List.unmodifiable(_conversations);
   String? get currentConversationId => _currentConversationId;
-  
+
   Conversation? get currentConversation {
     if (_currentConversationId == null) return null;
     try {
@@ -31,11 +32,11 @@ class ConversationManager {
     final conversation = Conversation.create(
       title ?? 'New Conversation ${_conversations.length + 1}',
     );
-    
+
     _conversations.add(conversation);
     _currentConversationId = conversation.id;
     _saveConversations();
-    
+
     return conversation;
   }
 
@@ -53,12 +54,12 @@ class ConversationManager {
     if (conversation != null) {
       final updatedMessages = List<ChatMessage>.from(conversation.messages);
       updatedMessages.add(message);
-      
+
       final updatedConversation = conversation.copyWith(
         messages: updatedMessages,
         lastMessageAt: message.timestamp,
       );
-      
+
       _updateConversation(updatedConversation);
     }
   }
@@ -75,7 +76,7 @@ class ConversationManager {
   // Delete a conversation
   void deleteConversation(String conversationId) {
     _conversations.removeWhere((c) => c.id == conversationId);
-    
+
     // If we deleted the current conversation, switch to the most recent one
     if (_currentConversationId == conversationId) {
       if (_conversations.isNotEmpty) {
@@ -86,7 +87,7 @@ class ConversationManager {
         _currentConversationId = null;
       }
     }
-    
+
     _saveConversations();
   }
 
@@ -97,7 +98,8 @@ class ConversationManager {
 
   // Private methods
   void _updateConversation(Conversation updatedConversation) {
-    final index = _conversations.indexWhere((c) => c.id == updatedConversation.id);
+    final index =
+        _conversations.indexWhere((c) => c.id == updatedConversation.id);
     if (index != -1) {
       _conversations[index] = updatedConversation;
       _saveConversations();
@@ -109,24 +111,28 @@ class ConversationManager {
       final stored = html.window.localStorage[_storageKey];
       if (stored != null) {
         final List<dynamic> jsonData = jsonDecode(stored);
-        _conversations = jsonData.map((json) => Conversation.fromJson(json)).toList();
-        
+        _conversations =
+            jsonData.map((json) => Conversation.fromJson(json)).toList();
+
         // Sort by last message time, most recent first
-        _conversations.sort((a, b) => b.lastMessageAt.compareTo(a.lastMessageAt));
+        _conversations
+            .sort((a, b) => b.lastMessageAt.compareTo(a.lastMessageAt));
       }
-      
+
       // Load current conversation ID
-      _currentConversationId = html.window.localStorage[_currentConversationKey];
-      
+      _currentConversationId =
+          html.window.localStorage[_currentConversationKey];
+
       // If no current conversation but conversations exist, select the most recent
       if (_currentConversationId == null && _conversations.isNotEmpty) {
         _currentConversationId = _conversations.first.id;
       }
-      
+
       // If current conversation doesn't exist in the list, reset it
-      if (_currentConversationId != null && 
+      if (_currentConversationId != null &&
           !_conversations.any((c) => c.id == _currentConversationId)) {
-        _currentConversationId = _conversations.isNotEmpty ? _conversations.first.id : null;
+        _currentConversationId =
+            _conversations.isNotEmpty ? _conversations.first.id : null;
       }
     } catch (e) {
       print('Error loading conversations: $e');
@@ -139,9 +145,10 @@ class ConversationManager {
     try {
       final jsonData = _conversations.map((c) => c.toJson()).toList();
       html.window.localStorage[_storageKey] = jsonEncode(jsonData);
-      
+
       if (_currentConversationId != null) {
-        html.window.localStorage[_currentConversationKey] = _currentConversationId!;
+        html.window.localStorage[_currentConversationKey] =
+            _currentConversationId!;
       } else {
         html.window.localStorage.remove(_currentConversationKey);
       }
