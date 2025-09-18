@@ -275,7 +275,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'ORIZON',
+                    'DYNAMIC PERSONA',
                     style: TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
@@ -429,7 +429,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'ORIZON',
+                        'DYNAMIC PERSONA',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
