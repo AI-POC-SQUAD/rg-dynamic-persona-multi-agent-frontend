@@ -32,6 +32,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   // Animation controllers
   late AnimationController _screenTransitionController;
   late AnimationController _iconTransitionController;
+  late AnimationController _personPanelController;
 
   @override
   void initState() {
@@ -45,6 +46,11 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
     _iconTransitionController = AnimationController(
       duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _personPanelController = AnimationController(
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
@@ -521,9 +527,20 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     return GestureDetector(
       onTap: () {
         if (icon == Icons.person) {
-          setState(() {
-            _showPersonPanel = !_showPersonPanel;
-          });
+          if (_showPersonPanel) {
+            // Close panel with animation
+            _personPanelController.reverse().then((_) {
+              setState(() {
+                _showPersonPanel = false;
+              });
+            });
+          } else {
+            // Open panel with animation
+            setState(() {
+              _showPersonPanel = true;
+            });
+            _personPanelController.forward();
+          }
         }
         // Handle other icons if needed
       },
@@ -1251,158 +1268,169 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       right: 0,
       top: 0,
       bottom: 0,
-      child: Material(
-        elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.25),
-        child: Container(
-          width: 432,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x40000000),
-                blurRadius: 65,
-                offset: Offset(-10, 0),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header with back button and title
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _showPersonPanel = false;
-                          });
-                        },
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE1DFE2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            size: 24,
-                            color: Color(0xFF535450),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1.0, 0.0), // Start off-screen to the right
+          end: Offset.zero, // End at normal position
+        ).animate(CurvedAnimation(
+          parent: _personPanelController,
+          curve: Curves.easeInOut,
+        )),
+        child: Material(
+          elevation: 0,
+          shadowColor: Colors.black.withValues(alpha: 0.25),
+          child: Container(
+            width: 432,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x40000000),
+                  blurRadius: 65,
+                  offset: Offset(-10, 0),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header with back button and title
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            _personPanelController.reverse().then((_) {
+                              setState(() {
+                                _showPersonPanel = false;
+                              });
+                            });
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE1DFE2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              size: 24,
+                              color: Color(0xFF535450),
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            _selectedSegment?.name ?? 'Environment evangelists',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Description text
+                    Text(
+                      "I'm skeptical of EVs; for me, it's all about the range. I mainly use my car for daily errands.",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                        height: 1.4,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          _selectedSegment?.name ?? 'Environment evangelists',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Sources section
+                    const Text(
+                      'Sources',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Source cards
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        _buildSourceCard('CMI', true),
+                        _buildSourceCard('CMI', true),
+                        _buildSourceCard('PERSO', false),
+                        _buildSourceCard('GOOGLE', true),
+                        _buildAddSourceCard(),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Adjust persona criteria section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Adjust persona criteria',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Description text
-                  Text(
-                    "I'm skeptical of EVs; for me, it's all about the range. I mainly use my car for daily errands.",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black,
-                      height: 1.4,
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Sources section
-                  const Text(
-                    'Sources',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Source cards
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      _buildSourceCard('CMI', true),
-                      _buildSourceCard('CMI', true),
-                      _buildSourceCard('PERSO', false),
-                      _buildSourceCard('GOOGLE', true),
-                      _buildAddSourceCard(),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Adjust persona criteria section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Adjust persona criteria',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // Reset functionality
-                          setState(() {
-                            _ruralUrbanSliderValue = 0.6;
-                            _poorRichSliderValue = 0.4;
-                          });
-                        },
-                        child: const Text(
-                          'Reset',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'NouvelR',
-                            color: Color(0xFF535450),
-                            decoration: TextDecoration.underline,
+                        GestureDetector(
+                          onTap: () {
+                            // Reset functionality
+                            setState(() {
+                              _ruralUrbanSliderValue = 0.6;
+                              _poorRichSliderValue = 0.4;
+                            });
+                          },
+                          child: const Text(
+                            'Reset',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'NouvelR',
+                              color: Color(0xFF535450),
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // Sliders
-                  _buildSlider('Rural', 'Urbain', _ruralUrbanSliderValue,
-                      (value) {
-                    setState(() {
-                      _ruralUrbanSliderValue = value;
-                    });
-                  }),
-                  const SizedBox(height: 24),
-                  _buildSlider('Poor', 'Rich', _poorRichSliderValue, (value) {
-                    setState(() {
-                      _poorRichSliderValue = value;
-                    });
-                  }),
-                ],
+                    // Sliders
+                    _buildSlider('Rural', 'Urbain', _ruralUrbanSliderValue,
+                        (value) {
+                      setState(() {
+                        _ruralUrbanSliderValue = value;
+                      });
+                    }),
+                    const SizedBox(height: 24),
+                    _buildSlider('Poor', 'Rich', _poorRichSliderValue, (value) {
+                      setState(() {
+                        _poorRichSliderValue = value;
+                      });
+                    }),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1546,6 +1574,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     _scrollController.dispose();
     _screenTransitionController.dispose();
     _iconTransitionController.dispose();
+    _personPanelController.dispose();
     super.dispose();
   }
 }
