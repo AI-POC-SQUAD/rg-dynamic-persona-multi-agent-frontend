@@ -505,15 +505,15 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
   Widget _buildHeaderIcon(IconData icon) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 48,
+      height: 48,
       decoration: const BoxDecoration(
-        color: Color(0xFFE1E1E3),
+        color: Color(0xFFFFFFFF),
         shape: BoxShape.circle,
       ),
       child: Icon(
         icon,
-        size: 20,
+        size: 26,
         color: const Color(0xFF535450),
       ),
     );
