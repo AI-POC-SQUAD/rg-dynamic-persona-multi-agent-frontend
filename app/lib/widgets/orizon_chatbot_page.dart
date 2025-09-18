@@ -222,20 +222,14 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 500),
         transitionBuilder: (Widget child, Animation<double> animation) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
+          return FadeTransition(
+            opacity: CurvedAnimation(
               parent: animation,
               curve: Curves.easeInOut,
-            )),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
             ),
+            child: child,
           );
         },
         child: _hasStartedConversation
@@ -472,11 +466,36 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24.0),
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: _buildChatInput(),
-              ),
+            child: Column(
+              children: [
+                // Chat Input Area
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: _buildChatInput(),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Explorer text
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Explorer les cas d\'utilisation',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF8F9893),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.menu,
+                      size: 24,
+                      color: Color(0xFF8F9893),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
