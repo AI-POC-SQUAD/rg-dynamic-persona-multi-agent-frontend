@@ -100,18 +100,18 @@ class _HomePageState extends State<HomePage>
     });
 
     // Navigate to the appropriate page based on selection
-    if (experience == 'Experience#1') {
+    if (experience == 'Home') {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => const OrizonChatBotPage(),
         ),
       );
-    } else if (experience == 'Experience#2') {
-      // Future implementation for Experience#2
+    } else if (experience == 'About') {
+      // Future implementation for About page
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Experience#2 coming soon!'),
+          content: Text('About page coming soon!'),
           backgroundColor: Color(0xFF535450),
         ),
       );
@@ -135,29 +135,47 @@ class _HomePageState extends State<HomePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Experience navigation
-                      Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildExperienceTab('Experience#1'),
-                            const SizedBox(width: 20),
-                            _buildExperienceTab('Experience#2'),
-                          ],
-                        ),
+                      // Header navigation
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Left side - Navigation tabs
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildExperienceTab('Home'),
+                              const SizedBox(width: 20),
+                              _buildExperienceTab('About'),
+                            ],
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 28),
 
-                      // DYNAMIC PERSONA title
-                      const Text(
-                        'DYNAMIC PERSONA',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
+                      // DYNAMIC PERSONA title - exactly as in Figma
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'DYNAMIC',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700, // Bold
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                          const Text(
+                            'PERSONA',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w300, // Book
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 8),
@@ -319,6 +337,58 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ],
+            ),
+          ),
+
+          // Right sidebar with CTAs - matching Figma design
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 40,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  // CTA buttons
+                  Column(
+                    children: [
+                      // Menu button
+                      Container(
+                        width: 32,
+                        height: 32,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.menu,
+                          size: 16,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                      // Message button
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F5F5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 16,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
