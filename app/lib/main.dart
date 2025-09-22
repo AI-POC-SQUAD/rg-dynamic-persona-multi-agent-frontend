@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets/orizon_chatbot_page.dart';
+import 'widgets/home_page.dart';
 
 void main() {
   runApp(const DynamicPersonaApp());
@@ -17,7 +17,7 @@ class DynamicPersonaApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const SelectionArea(
-        child: OrizonChatBotPage(),
+        child: HomePage(),
       ),
       debugShowCheckedModeBanner: false,
     );

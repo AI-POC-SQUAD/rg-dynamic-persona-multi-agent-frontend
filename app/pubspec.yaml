@@ -14,6 +14,7 @@ dependencies:
   http: ^0.13.0
   uuid: ^3.0.7
   cupertino_icons: ^1.0.6
+  video_player: ^2.8.1
 
 dev_dependencies:
   flutter_test:
@@ -25,7 +26,8 @@ flutter:
 
   # Add assets here for the new Orizon UI
   assets:
-    - assets/
+    - assets/videos/sphere_animation.gif
+    - assets/videos/sphere_animation.mp4
 
   # Custom fonts for the Orizon design (commented out until font files are available)
   fonts:
