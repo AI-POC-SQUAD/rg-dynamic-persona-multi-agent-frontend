@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter/foundation.dart';
 import 'orizon_chatbot_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -9,36 +10,87 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   String? _selectedExperience;
   late VideoPlayerController _videoController;
   bool _isVideoInitialized = false;
+  bool _useVideoPlayer = true;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
+    _checkVideoCompatibility();
+    _setupFallbackAnimation();
+  }
+
+  void _checkVideoCompatibility() {
+    // Check if we're running in WASM mode or if video player should be avoided
+    // In WASM mode, video player might not work properly
+    if (kIsWeb) {
+      // Try to initialize video with a timeout
+      _initializeVideo();
+    } else {
+      _initializeVideo();
+    }
+  }
+
+  void _setupFallbackAnimation() {
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.repeat(reverse: true);
   }
 
   void _initializeVideo() {
     _videoController =
         VideoPlayerController.asset('assets/videos/sphere_animation.mp4');
+
+    // Add a timeout for video initialization
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!_isVideoInitialized && mounted) {
+        setState(() {
+          _useVideoPlayer = false;
+        });
+      }
+    });
+
     _videoController.initialize().then((_) {
-      setState(() {
-        _isVideoInitialized = true;
-      });
-      _videoController.setLooping(true);
-      _videoController.setVolume(0.0); // Mute the video
-      _videoController.play();
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+          _useVideoPlayer = true;
+        });
+        _videoController.setLooping(true);
+        _videoController.setVolume(0.0); // Mute the video
+        _videoController.play();
+      }
     }).catchError((error) {
       print('Error initializing video: $error');
-      // If video fails to load, we'll just show the gradient fallback
+      if (mounted) {
+        setState(() {
+          _useVideoPlayer = false;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
     _videoController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -142,26 +194,45 @@ class _HomePageState extends State<HomePage> {
                                   0.7, // Much larger to match screenshot proportions
                               height:
                                   screenHeight * 0.7, // Square aspect, larger
-                              child: _isVideoInitialized
+                              child: _useVideoPlayer && _isVideoInitialized
                                   ? ClipRRect(
                                       child: AspectRatio(
                                         aspectRatio: 1.23, // Square
                                         child: VideoPlayer(_videoController),
                                       ),
                                     )
-                                  : Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(325),
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Color(0xFFE8E6E9),
-                                            Color(0xFFDDD9DD),
-                                          ],
-                                        ),
-                                      ),
+                                  : AnimatedBuilder(
+                                      animation: _scaleAnimation,
+                                      builder: (context, child) {
+                                        return Transform.scale(
+                                          scale: _scaleAnimation.value,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(325),
+                                              gradient: const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Color(0xFFE8E6E9),
+                                                  Color(0xFFDDD9DD),
+                                                  Color(0xFFD1CCD1),
+                                                  Color(0xFFE8E6E9),
+                                                ],
+                                                stops: [0.0, 0.3, 0.7, 1.0],
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.1),
+                                                  blurRadius: 20,
+                                                  offset: const Offset(0, 10),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                             ),
                           ),

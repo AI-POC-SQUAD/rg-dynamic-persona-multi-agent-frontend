@@ -1,28 +1,25 @@
 import 'dart:convert';
-import 'dart:js' as js;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
   Map<String, dynamic>? _runtimeConfig;
 
-  /// Get runtime configuration from window.__RUNTIME_CONFIG__
+  /// Get runtime configuration from .env file using flutter_dotenv
   Map<String, dynamic>? getRuntimeConfig() {
     if (_runtimeConfig != null) return _runtimeConfig;
 
     try {
-      // Access runtime config from JavaScript using dart:js
-      final jsConfig = js.context['__RUNTIME_CONFIG__'];
-      if (jsConfig != null) {
-        _runtimeConfig = {
-          'APP_PUBLIC_PATH': jsConfig['APP_PUBLIC_PATH'] ?? '/',
-          'BACKEND_BASE_URL': jsConfig['BACKEND_BASE_URL'] ?? '/api',
-          'IAP_MODE': jsConfig['IAP_MODE'] ?? false,
-          'IAP_AUDIENCE': jsConfig['IAP_AUDIENCE'] ?? '',
-          'AUTH_MODE': jsConfig['AUTH_MODE'] ?? 'none', // none, bearer, iap
-          'BEARER_TOKEN':
-              jsConfig['BEARER_TOKEN'] ?? '', // For Cloud Run IAM auth
-        };
-      }
+      // Load configuration from .env file instead of JavaScript
+      _runtimeConfig = {
+        'APP_PUBLIC_PATH': dotenv.env['APP_PUBLIC_PATH'] ?? '/',
+        'BACKEND_BASE_URL': dotenv.env['BACKEND_BASE_URL'] ?? '/api',
+        'IAP_MODE': dotenv.env['IAP_MODE']?.toLowerCase() == 'true',
+        'IAP_AUDIENCE': dotenv.env['IAP_AUDIENCE'] ?? '',
+        'AUTH_MODE': dotenv.env['AUTH_MODE'] ?? 'none', // none, bearer, iap
+        'BEARER_TOKEN':
+            dotenv.env['BEARER_TOKEN'] ?? '', // For Cloud Run IAM auth
+      };
     } catch (e) {
       print('Error loading runtime config: $e');
     }

@@ -67,9 +67,9 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     }
   }
 
-  void _initializeConversation() {
+  Future<void> _initializeConversation() async {
     if (_conversationManager.conversations.isEmpty) {
-      _conversationManager.createConversation(title: 'Orizon Chat');
+      await _conversationManager.createConversation(title: 'Orizon Chat');
     }
   }
 
@@ -93,7 +93,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     print('Selected option mode: $mode');
   }
 
-  void _startConversation() {
+  Future<void> _startConversation() async {
     if (_selectedSegment == null) return;
 
     // Start screen transition animation
@@ -111,7 +111,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       isUser: false,
       timestamp: DateTime.now(),
     );
-    _conversationManager.addMessageToCurrentConversation(initialMessage);
+    await _conversationManager.addMessageToCurrentConversation(initialMessage);
   }
 
   Future<void> _sendMessage() async {
@@ -121,15 +121,13 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     final currentConversation = _conversationManager.currentConversation;
 
     if (currentConversation == null) {
-      _conversationManager.createConversation(title: 'Orizon Chat');
+      await _conversationManager.createConversation(title: 'Orizon Chat');
     }
 
     final userId = _conversationManager.getCurrentUserId();
     if (userId == null) {
-      setState(() {
-        _addErrorMessage(
-            'No active conversation. Please create a new conversation.');
-      });
+      await _addErrorMessage(
+          'No active conversation. Please create a new conversation.');
       return;
     }
 
@@ -141,7 +139,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       timestamp: DateTime.now(),
     );
 
-    _conversationManager.addMessageToCurrentConversation(userChatMessage);
+    await _conversationManager.addMessageToCurrentConversation(userChatMessage);
 
     setState(() {
       _isLoading = true;
@@ -187,7 +185,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         sessionId: sessionId,
       );
 
-      _conversationManager.addMessageToCurrentConversation(botChatMessage);
+      await _conversationManager
+          .addMessageToCurrentConversation(botChatMessage);
       _scrollToBottom();
     } catch (e) {
       final errorMessage = ChatMessage(
@@ -196,7 +195,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         timestamp: DateTime.now(),
         isError: true,
       );
-      _conversationManager.addMessageToCurrentConversation(errorMessage);
+      await _conversationManager.addMessageToCurrentConversation(errorMessage);
       _scrollToBottom();
     } finally {
       setState(() {
@@ -205,14 +204,14 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     }
   }
 
-  void _addErrorMessage(String message) {
+  Future<void> _addErrorMessage(String message) async {
     final errorMessage = ChatMessage(
       text: message,
       isUser: false,
       timestamp: DateTime.now(),
       isError: true,
     );
-    _conversationManager.addMessageToCurrentConversation(errorMessage);
+    await _conversationManager.addMessageToCurrentConversation(errorMessage);
     _scrollToBottom();
   }
 

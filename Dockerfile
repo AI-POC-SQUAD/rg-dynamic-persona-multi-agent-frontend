@@ -12,8 +12,11 @@ RUN flutter pub get
 # Copy source code
 COPY app/ ./
 
-# Build Flutter web for production
-RUN flutter build web --release
+# Create a placeholder .env file if it doesn't exist (for build-time)
+RUN touch .env
+
+# Build Flutter web for production with WASM
+RUN flutter build web --wasm --release
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine

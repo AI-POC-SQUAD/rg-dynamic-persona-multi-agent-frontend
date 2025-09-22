@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:html' as html;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/conversation.dart';
 
 class ConversationManager {
@@ -9,9 +9,15 @@ class ConversationManager {
 
   List<Conversation> _conversations = [];
   String? _currentConversationId;
+  SharedPreferences? _prefs;
 
   ConversationManager() {
-    _loadConversations();
+    _initializeAsync();
+  }
+
+  Future<void> _initializeAsync() async {
+    _prefs = await SharedPreferences.getInstance();
+    await _loadConversations();
   }
 
   // Getters
@@ -28,28 +34,29 @@ class ConversationManager {
   }
 
   // Create a new conversation
-  Conversation createConversation({String? title}) {
+  Future<Conversation> createConversation({String? title}) async {
     final conversation = Conversation.create(
       title ?? 'New Conversation ${_conversations.length + 1}',
     );
 
     _conversations.add(conversation);
     _currentConversationId = conversation.id;
-    _saveConversations();
+    await _saveConversations();
 
     return conversation;
   }
 
   // Switch to a conversation
-  void switchToConversation(String conversationId) {
+  Future<void> switchToConversation(String conversationId) async {
     if (_conversations.any((c) => c.id == conversationId)) {
       _currentConversationId = conversationId;
-      html.window.localStorage[_currentConversationKey] = conversationId;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_currentConversationKey, conversationId);
     }
   }
 
   // Add a message to the current conversation
-  void addMessageToCurrentConversation(ChatMessage message) {
+  Future<void> addMessageToCurrentConversation(ChatMessage message) async {
     final conversation = currentConversation;
     if (conversation != null) {
       final updatedMessages = List<ChatMessage>.from(conversation.messages);
@@ -60,21 +67,22 @@ class ConversationManager {
         lastMessageAt: message.timestamp,
       );
 
-      _updateConversation(updatedConversation);
+      await _updateConversation(updatedConversation);
     }
   }
 
   // Update conversation title
-  void updateConversationTitle(String conversationId, String newTitle) {
+  Future<void> updateConversationTitle(
+      String conversationId, String newTitle) async {
     final index = _conversations.indexWhere((c) => c.id == conversationId);
     if (index != -1) {
       _conversations[index] = _conversations[index].copyWith(title: newTitle);
-      _saveConversations();
+      await _saveConversations();
     }
   }
 
   // Delete a conversation
-  void deleteConversation(String conversationId) {
+  Future<void> deleteConversation(String conversationId) async {
     _conversations.removeWhere((c) => c.id == conversationId);
 
     // If we deleted the current conversation, switch to the most recent one
@@ -88,7 +96,7 @@ class ConversationManager {
       }
     }
 
-    _saveConversations();
+    await _saveConversations();
   }
 
   // Get user ID for current conversation
@@ -97,18 +105,19 @@ class ConversationManager {
   }
 
   // Private methods
-  void _updateConversation(Conversation updatedConversation) {
+  Future<void> _updateConversation(Conversation updatedConversation) async {
     final index =
         _conversations.indexWhere((c) => c.id == updatedConversation.id);
     if (index != -1) {
       _conversations[index] = updatedConversation;
-      _saveConversations();
+      await _saveConversations();
     }
   }
 
-  void _loadConversations() {
+  Future<void> _loadConversations() async {
     try {
-      final stored = html.window.localStorage[_storageKey];
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getString(_storageKey);
       if (stored != null) {
         final List<dynamic> jsonData = jsonDecode(stored);
         _conversations =
@@ -120,8 +129,7 @@ class ConversationManager {
       }
 
       // Load current conversation ID
-      _currentConversationId =
-          html.window.localStorage[_currentConversationKey];
+      _currentConversationId = prefs.getString(_currentConversationKey);
 
       // If no current conversation but conversations exist, select the most recent
       if (_currentConversationId == null && _conversations.isNotEmpty) {
@@ -141,16 +149,16 @@ class ConversationManager {
     }
   }
 
-  void _saveConversations() {
+  Future<void> _saveConversations() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       final jsonData = _conversations.map((c) => c.toJson()).toList();
-      html.window.localStorage[_storageKey] = jsonEncode(jsonData);
+      await prefs.setString(_storageKey, jsonEncode(jsonData));
 
       if (_currentConversationId != null) {
-        html.window.localStorage[_currentConversationKey] =
-            _currentConversationId!;
+        await prefs.setString(_currentConversationKey, _currentConversationId!);
       } else {
-        html.window.localStorage.remove(_currentConversationKey);
+        await prefs.remove(_currentConversationKey);
       }
     } catch (e) {
       print('Error saving conversations: $e');
@@ -158,10 +166,11 @@ class ConversationManager {
   }
 
   // Clear all conversations (for debugging/reset)
-  void clearAllConversations() {
+  Future<void> clearAllConversations() async {
     _conversations.clear();
     _currentConversationId = null;
-    html.window.localStorage.remove(_storageKey);
-    html.window.localStorage.remove(_currentConversationKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+    await prefs.remove(_currentConversationKey);
   }
 }
