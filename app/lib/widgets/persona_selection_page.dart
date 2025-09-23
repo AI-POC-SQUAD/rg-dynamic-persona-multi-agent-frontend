@@ -329,15 +329,15 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
       margin: const EdgeInsets.symmetric(horizontal: 64),
       child: Center(
         child: SizedBox(
-          width: 650, // Fixed width for better proportions
-          height: 334,
+          width: 650 * 1.5, // Fixed width for better proportions
+          height: 334 * 1.5,
           child: Stack(
             children: [
               // Background image (full width)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(42),
                     image: DecorationImage(
                       image: AssetImage(persona.backgroundAsset),
                       //fit: BoxFit.cover,
@@ -354,10 +354,10 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  width: 400, // Fixed width for card
+                  width: 500, // Fixed width for card
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(42),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
@@ -367,7 +367,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(36),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -375,7 +375,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         Text(
                           'Persona ${index + 1}/5',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 18,
                             fontWeight: FontWeight.w200,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
@@ -388,7 +388,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         Text(
                           persona.name,
                           style: const TextStyle(
-                            fontSize: 26,
+                            fontSize: 42,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
@@ -403,7 +403,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           child: Text(
                             persona.description,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 24,
                               fontWeight: FontWeight.w300,
                               fontFamily: 'NouvelR',
                               color: Colors.black,
@@ -419,11 +419,11 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           children: [
                             // Persona selection indicator
                             Container(
-                              width: 28,
-                              height: 28,
+                              width: 42,
+                              height: 42,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(21),
                                 border: Border.all(
                                     color: const Color(0xFFC4C4C4), width: 0.5),
                               ),
@@ -446,8 +446,8 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(13),
                                       child: Container(
-                                        width: 26,
-                                        height: 26,
+                                        width: 40,
+                                        height: 40,
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
                                             image:
@@ -469,7 +469,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                               child: Text(
                                 persona.name,
                                 style: const TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w200,
                                   fontFamily: 'NouvelR',
                                   color: Colors.black,
@@ -482,7 +482,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                             // Settings icon
                             const Icon(
                               Icons.settings,
-                              size: 16,
+                              size: 24,
                               color: Color(0xFF535450),
                             ),
 
@@ -510,7 +510,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                                 child: const Text(
                                   'Go',
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 21,
                                     fontWeight: FontWeight.w200,
                                     fontFamily: 'NouvelR',
                                     color: Colors.white,
@@ -531,11 +531,11 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                 bottom: 16,
                 right: 16,
                 child: Container(
-                  width: 32,
-                  height: 32,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(21),
                     border:
                         Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
                   ),
@@ -543,8 +543,8 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                     borderRadius: BorderRadius.circular(14),
                     child: Image.asset(
                       persona.sphereAsset,
-                      width: 30,
-                      height: 30,
+                      width: 40,
+                      height: 40,
                       fit: BoxFit.cover,
                     ),
                   ),

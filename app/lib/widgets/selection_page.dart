@@ -291,20 +291,20 @@ class _SelectionPageState extends State<SelectionPage> {
             const Text(
               'Mode',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 18,
                 fontWeight: FontWeight.w200,
                 fontFamily: 'NouvelR',
                 color: Colors.black,
               ),
             ),
 
-            const SizedBox(height: 16),
+            //const SizedBox(height: 8),
 
             // Title
             Text(
               title,
               style: TextStyle(
-                fontSize: 26,
+                fontSize: 32,
                 fontWeight: FontWeight.w400,
                 fontFamily: 'NouvelR',
                 color: Colors.black,
@@ -312,13 +312,13 @@ class _SelectionPageState extends State<SelectionPage> {
               ),
             ),
 
-            const SizedBox(height: 58),
+            const SizedBox(height: 10),
 
             // Description
             Text(
               description,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 19,
                 fontWeight: FontWeight.w300,
                 fontFamily: 'NouvelR',
                 color: Colors.black,
