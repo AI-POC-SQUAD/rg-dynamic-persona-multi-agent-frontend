@@ -252,13 +252,35 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
           SafeArea(
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Back button and ORIZON title
-                  Row(
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text(
+                        'DYNAMIC',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700, // Bold
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                          height: 1.0,
+                        ),
+                      ),
+                      const Text(
+                        'PERSONA',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w300, // Book weight
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                          height: 1.0,
+                        ),
+                      ),
                       IconButton(
                         onPressed: () {
                           Navigator.pop(context);
@@ -266,18 +288,9 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                         icon: const Icon(Icons.arrow_back, color: Colors.black),
                         splashRadius: 20,
                       ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'DYNAMIC PERSONA',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
                     ],
                   ),
+
                   // Assignment and Person buttons (keeping as requested)
                   Row(
                     children: [
