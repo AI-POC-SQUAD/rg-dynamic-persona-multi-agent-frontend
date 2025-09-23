@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/customer_segment.dart';
+import '../models/persona_data.dart';
 import '../services/api_client.dart';
 import '../services/conversation_manager.dart';
 import '../models/conversation.dart';
 
 class OrizonChatBotPage extends StatefulWidget {
-  const OrizonChatBotPage({super.key});
+  final PersonaData? selectedPersona;
+
+  const OrizonChatBotPage({super.key, this.selectedPersona});
 
   @override
   State<OrizonChatBotPage> createState() => _OrizonChatBotPageState();
@@ -56,6 +59,23 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
     _loadRuntimeConfig();
     _initializeConversation();
+
+    // If a persona is pre-selected, automatically select the corresponding segment
+    if (widget.selectedPersona != null) {
+      _autoSelectSegmentFromPersona(widget.selectedPersona!);
+    }
+  }
+
+  void _autoSelectSegmentFromPersona(PersonaData persona) {
+    // Find matching segment based on persona name
+    final matchingSegment = _segments.firstWhere(
+      (segment) => segment.name.toLowerCase() == persona.name.toLowerCase(),
+      orElse: () => _segments.first, // Fallback to first segment
+    );
+
+    // Automatically select the segment and start conversation
+    _selectSegment(matchingSegment);
+    _startConversation();
   }
 
   void _loadRuntimeConfig() {

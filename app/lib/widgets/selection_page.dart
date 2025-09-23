@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'orizon_chatbot_page.dart';
+import 'persona_selection_page.dart';
 
 class SelectionPage extends StatefulWidget {
   const SelectionPage({super.key});
@@ -150,7 +150,7 @@ class _SelectionPageState extends State<SelectionPage> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            const OrizonChatBotPage(),
+                                            const PersonaSelectionPage(),
                                       ),
                                     );
                                   },
