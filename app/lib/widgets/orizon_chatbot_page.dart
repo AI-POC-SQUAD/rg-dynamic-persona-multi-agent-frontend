@@ -232,9 +232,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         children: [
           // Main content - always show chat view
           _buildChatView(),
-
-          // Person Panel Overlay
-          if (_showPersonPanel) _buildPersonPanel(),
         ],
       ),
     );
@@ -246,168 +243,181 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
-      body: Column(
+      body: Stack(
         children: [
-          // Header with centered ORIZON title and action buttons
-          SafeArea(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Back button and ORIZON title
-
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Column(
+            children: [
+              // Header with centered ORIZON title and action buttons
+              SafeArea(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'DYNAMIC',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700, // Bold
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                          height: 1.0,
-                        ),
-                      ),
-                      const Text(
-                        'PERSONA',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w300, // Book weight
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                          height: 1.0,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.arrow_back, color: Colors.black),
-                        splashRadius: 20,
+                      // Back button and ORIZON title
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'DYNAMIC',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700, // Bold
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                              height: 1.0,
+                            ),
+                          ),
+                          const Text(
+                            'PERSONA',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w300, // Book weight
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                              height: 1.0,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(Icons.arrow_back,
+                                color: Colors.black),
+                            splashRadius: 20,
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                ),
+              ),
 
-                  // Assignment and Person buttons (keeping as requested)
-                  Row(
+              // Messages with centered layout
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  child: Center(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 700),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 16),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          return _buildChatMessage(messages[index]);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Loading indicator
+              if (_isLoading)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: const CircularProgressIndicator(
+                    color: Color(0xFF535450),
+                  ),
+                ),
+
+              // Chat Input with centered layout
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    // Chat Input Area
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: _buildChatInput(),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Explorer text
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Explorer les cas d\'utilisation',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF8F9893),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(
+                          Icons.menu,
+                          size: 24,
+                          color: Color(0xFF8F9893),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Right sidebar
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 60,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 60),
+                  // CTA buttons
+                  Column(
                     children: [
-                      _buildHeaderIcon(Icons.assignment),
-                      const SizedBox(width: 12),
-                      _buildHeaderIcon(Icons.person),
+                      // Message button
+                      Container(
+                        width: 42,
+                        height: 42,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 24,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                      // Menu button
+                      Container(
+                        width: 42,
+                        height: 42,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: const Icon(
+                          Icons.menu,
+                          size: 24,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                      // Folder button
+                      Container(
+                        width: 42,
+                        height: 42,
+                        child: const Icon(
+                          Icons.folder_outlined,
+                          size: 24,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
           ),
-
-          // Messages with centered layout
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 700),
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 16),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      return _buildChatMessage(messages[index]);
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Loading indicator
-          if (_isLoading)
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: const CircularProgressIndicator(
-                color: Color(0xFF535450),
-              ),
-            ),
-
-          // Chat Input with centered layout
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                // Chat Input Area
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: _buildChatInput(),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Explorer text
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Explorer les cas d\'utilisation',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF8F9893),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.menu,
-                      size: 24,
-                      color: Color(0xFF8F9893),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderIcon(IconData icon) {
-    return GestureDetector(
-      onTap: () {
-        if (icon == Icons.person) {
-          if (_showPersonPanel) {
-            // Close panel with animation
-            _personPanelController.reverse().then((_) {
-              setState(() {
-                _showPersonPanel = false;
-              });
-            });
-          } else {
-            // Open panel with animation
-            setState(() {
-              _showPersonPanel = true;
-            });
-            _personPanelController.forward();
-          }
-        }
-        // Handle other icons if needed
-      },
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: const BoxDecoration(
-          color: Color(0xFFFFFFFF),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: 26,
-          color: const Color(0xFF535450),
-        ),
       ),
     );
   }
@@ -930,312 +940,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         }
       }
     }
-  }
-
-  // Person Panel Widget with Figma Design
-  Widget _buildPersonPanel() {
-    return Positioned(
-      right: 0,
-      top: 0,
-      bottom: 0,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(1.0, 0.0), // Start off-screen to the right
-          end: Offset.zero, // End at normal position
-        ).animate(CurvedAnimation(
-          parent: _personPanelController,
-          curve: Curves.easeInOut,
-        )),
-        child: Material(
-          elevation: 0,
-          shadowColor: Colors.black.withValues(alpha: 0.25),
-          child: Container(
-            width: 432,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x40000000),
-                  blurRadius: 65,
-                  offset: Offset(-10, 0),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header with back button and title
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            _personPanelController.reverse().then((_) {
-                              setState(() {
-                                _showPersonPanel = false;
-                              });
-                            });
-                          },
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE1DFE2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              size: 24,
-                              color: Color(0xFF535450),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            _selectedSegment?.name ?? 'Environment evangelists',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Description text
-                    Text(
-                      "I'm skeptical of EVs; for me, it's all about the range. I mainly use my car for daily errands.",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                        height: 1.4,
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Sources section
-                    const Text(
-                      'Sources',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Source cards
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: [
-                        _buildSourceCard('CMI', true),
-                        _buildSourceCard('CMI', true),
-                        _buildSourceCard('PERSO', false),
-                        _buildSourceCard('GOOGLE', true),
-                        _buildAddSourceCard(),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Adjust persona criteria section
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Adjust persona criteria',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            // Reset functionality
-                            setState(() {
-                              _ruralUrbanSliderValue = 0.6;
-                              _poorRichSliderValue = 0.4;
-                            });
-                          },
-                          child: const Text(
-                            'Reset',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'NouvelR',
-                              color: Color(0xFF535450),
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Sliders
-                    _buildSlider('Rural', 'Urbain', _ruralUrbanSliderValue,
-                        (value) {
-                      setState(() {
-                        _ruralUrbanSliderValue = value;
-                      });
-                    }),
-                    const SizedBox(height: 24),
-                    _buildSlider('Poor', 'Rich', _poorRichSliderValue, (value) {
-                      setState(() {
-                        _poorRichSliderValue = value;
-                      });
-                    }),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSourceCard(String label, bool isActive) {
-    return Container(
-      width: 74,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFFE1E1E3),
-          width: 1,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Main card content
-          Positioned.fill(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontFamily: 'NouvelR',
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ),
-          ),
-
-          // Top-right corner indicator
-          if (isActive)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(8),
-                    bottomLeft: Radius.circular(8),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.lock,
-                  size: 10,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddSourceCard() {
-    return GestureDetector(
-      onTap: () {
-        // Add source functionality
-        print('Add new source');
-      },
-      child: Container(
-        width: 74,
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: const Color(0xFFE1E1E3),
-            width: 1,
-          ),
-        ),
-        child: const Icon(
-          Icons.add,
-          size: 24,
-          color: Color(0xFF535450),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSlider(String leftLabel, String rightLabel, double value,
-      ValueChanged<double> onChanged) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              leftLabel,
-              style: const TextStyle(
-                fontSize: 14,
-                fontFamily: 'NouvelR',
-                color: Colors.black,
-              ),
-            ),
-            Text(
-              rightLabel,
-              style: const TextStyle(
-                fontSize: 14,
-                fontFamily: 'NouvelR',
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: Colors.black,
-            inactiveTrackColor: const Color(0xFFE1E1E3),
-            thumbColor: Colors.black,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-            trackHeight: 2,
-          ),
-          child: Slider(
-            value: value,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
   }
 
   @override
