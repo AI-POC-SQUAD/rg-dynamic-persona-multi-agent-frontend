@@ -13,6 +13,13 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
   List<PersonaData> personas = PersonaData.getPersonas();
+  bool _showDescriptionView = false;
+
+  // Slider values for description view
+  double _housingCondition = 50;
+  double _income = 50;
+  double _population = 50;
+  double _age = 50;
 
   @override
   void dispose() {
@@ -330,7 +337,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
       child: Center(
         child: SizedBox(
           width: 650 * 1.5, // Fixed width for better proportions
-          height: 334 * 1.5,
+          height: 334 * 1.7,
           child: Stack(
             children: [
               // Background image (full width)
@@ -341,7 +348,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                     image: DecorationImage(
                       image: AssetImage(persona.backgroundAsset),
                       //fit: BoxFit.cover,
-                      alignment: AlignmentDirectional(2.5, -0.5),
+                      alignment: AlignmentDirectional(4.5, -0.5),
                       //fit: BoxFit.cover,
                     ),
                   ),
@@ -354,7 +361,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  width: 500, // Fixed width for card
+                  width: 600, // Fixed width for card
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(42),
@@ -382,13 +389,13 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 16),
+                        //const SizedBox(height: 16),
 
                         // Persona name
                         Text(
                           persona.name,
                           style: const TextStyle(
-                            fontSize: 42,
+                            fontSize: 40,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
@@ -396,20 +403,22 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 42),
 
-                        // Description
+                        // Description or Sliders based on toggle
                         Expanded(
-                          child: Text(
-                            persona.description,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w300,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                              height: 1.5,
-                            ),
-                          ),
+                          child: _showDescriptionView
+                              ? _buildDescriptionSliders()
+                              : Text(
+                                  persona.description,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w300,
+                                    fontFamily: 'NouvelR',
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
                         ),
 
                         const SizedBox(height: 24),
@@ -480,10 +489,19 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                             const SizedBox(width: 8),
 
                             // Settings icon
-                            const Icon(
-                              Icons.settings,
-                              size: 24,
-                              color: Color(0xFF535450),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _showDescriptionView = !_showDescriptionView;
+                                });
+                              },
+                              child: Icon(
+                                _showDescriptionView
+                                    ? Icons.person
+                                    : Icons.settings,
+                                size: 24,
+                                color: Color(0xFF535450),
+                              ),
                             ),
 
                             const SizedBox(width: 16),
@@ -554,6 +572,72 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDescriptionSliders() {
+    return Column(
+      children: [
+        // Housing Condition Slider
+        _buildSlider(
+          'Housing Condition',
+          _housingCondition,
+          (value) => setState(() => _housingCondition = value),
+        ),
+
+        // Income Slider
+        _buildSlider(
+          'Income',
+          _income,
+          (value) => setState(() => _income = value),
+        ),
+        // Population Slider
+        _buildSlider(
+          'Population',
+          _population,
+          (value) => setState(() => _population = value),
+        ),
+
+        // Age Slider
+        _buildSlider(
+          'Age',
+          _age,
+          (value) => setState(() => _age = value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlider(String title, double value, Function(double) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'NouvelR',
+            color: Colors.black,
+          ),
+        ),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: const Color(0xFF535450),
+            inactiveTrackColor: const Color(0xFFE1DFE2),
+            thumbColor: const Color(0xFF535450),
+            overlayColor: const Color(0xFF535450).withOpacity(0.2),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            trackHeight: 4,
+          ),
+          child: Slider(
+            value: value,
+            min: 0,
+            max: 100,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }
