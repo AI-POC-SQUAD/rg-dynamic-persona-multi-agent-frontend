@@ -130,7 +130,57 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         },
                         itemCount: personas.length,
                         itemBuilder: (context, index) {
-                          return _buildPersonaCard(personas[index], index);
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildPersonaCard(personas[index], index),
+                              const SizedBox(height: 24),
+                              // Carousel indicators positioned directly under each persona card
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(
+                                  personas.length,
+                                  (indicatorIndex) {
+                                    // Specific sizes for each indicator as per Figma design
+                                    double size;
+                                    if (indicatorIndex == _currentIndex) {
+                                      size = 12.0; // Active indicator (largest)
+                                    } else if ((indicatorIndex - _currentIndex)
+                                            .abs() ==
+                                        1) {
+                                      size =
+                                          8.0; // Adjacent indicators (medium)
+                                    } else {
+                                      size = 4.0; // Far indicators (smallest)
+                                    }
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        _pageController.animateToPage(
+                                          indicatorIndex,
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          curve: Curves.easeInOut,
+                                        );
+                                      },
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(
+                                            horizontal: size == 12.0 ? 8 : 6),
+                                        width: size,
+                                        height: size,
+                                        decoration: BoxDecoration(
+                                          color: indicatorIndex == _currentIndex
+                                              ? Colors.black
+                                              : Colors.black.withOpacity(0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
                         },
                       ),
 
@@ -184,50 +234,6 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         ),
                       ),
                     ],
-                  ),
-                ),
-
-                // Carousel indicators (matching Figma design)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      personas.length,
-                      (index) {
-                        // Specific sizes for each indicator as per Figma design
-                        double size;
-                        if (index == _currentIndex) {
-                          size = 12.0; // Active indicator (largest)
-                        } else if ((index - _currentIndex).abs() == 1) {
-                          size = 8.0; // Adjacent indicators (medium)
-                        } else {
-                          size = 4.0; // Far indicators (smallest)
-                        }
-
-                        return GestureDetector(
-                          onTap: () {
-                            _pageController.animateToPage(
-                              index,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                          child: Container(
-                            margin: EdgeInsets.symmetric(
-                                horizontal: size == 12.0 ? 8 : 6),
-                            width: size,
-                            height: size,
-                            decoration: BoxDecoration(
-                              color: index == _currentIndex
-                                  ? Colors.black
-                                  : Colors.black.withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ),
 
