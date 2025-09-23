@@ -612,15 +612,31 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'NouvelR',
-            color: Colors.black,
-          ),
+        // Title and value row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'NouvelR',
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              '${value.round()}',
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'NouvelR',
+                color: Color(0xFF535450),
+              ),
+            ),
+          ],
         ),
+        //const SizedBox(height: 8),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: const Color(0xFF535450),
