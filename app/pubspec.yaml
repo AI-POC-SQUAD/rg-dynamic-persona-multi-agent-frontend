@@ -34,6 +34,11 @@ flutter:
     - assets/images/persona_2.png
     - assets/images/persona_3.png
     - assets/images/persona_4.png
+    - assets/images/sphere_0.png
+    - assets/images/sphere_1.png
+    - assets/images/sphere_2.png
+    - assets/images/sphere_3.png
+    - assets/images/sphere_4.png
 
   # Custom fonts for the Orizon design (commented out until font files are available)
   fonts:

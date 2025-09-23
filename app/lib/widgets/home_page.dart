@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'orizon_chatbot_page.dart';
+import 'selection_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const OrizonChatBotPage(),
+                builder: (context) => const SelectionPage(),
               ),
             );
           });
