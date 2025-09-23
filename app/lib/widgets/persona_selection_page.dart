@@ -136,8 +136,8 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
 
                       // Left navigation arrow
                       Positioned(
-                        left: 24,
-                        top: MediaQuery.of(context).size.height * 0.3,
+                        left: 60,
+                        top: MediaQuery.of(context).size.height * 0.4,
                         child: GestureDetector(
                           onTap: () {
                             if (_currentIndex > 0) {
@@ -150,16 +150,10 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           child: Container(
                             width: 48,
                             height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: const Color(0xFFC4C4C4), width: 0.5),
-                            ),
                             child: const Icon(
-                              Icons.arrow_back_ios_new,
+                              Icons.arrow_back,
                               color: Color(0xFF535450),
-                              size: 20,
+                              size: 48,
                             ),
                           ),
                         ),
@@ -167,8 +161,8 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
 
                       // Right navigation arrow
                       Positioned(
-                        right: 24,
-                        top: MediaQuery.of(context).size.height * 0.3,
+                        right: 120,
+                        top: MediaQuery.of(context).size.height * 0.4,
                         child: GestureDetector(
                           onTap: () {
                             if (_currentIndex < personas.length - 1) {
@@ -181,16 +175,10 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           child: Container(
                             width: 48,
                             height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: const Color(0xFFC4C4C4), width: 0.5),
-                            ),
                             child: const Icon(
-                              Icons.arrow_forward_ios,
+                              Icons.arrow_forward,
                               color: Color(0xFF535450),
-                              size: 20,
+                              size: 48,
                             ),
                           ),
                         ),
@@ -201,7 +189,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
 
                 // Carousel indicators (matching Figma design)
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 32),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -277,57 +265,45 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
             top: 0,
             bottom: 0,
             child: Container(
-              width: 40,
+              width: 60,
               decoration: const BoxDecoration(
                 color: Colors.white,
               ),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 60),
                   // CTA buttons
                   Column(
                     children: [
                       // Message button
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 42,
+                        height: 42,
                         margin: const EdgeInsets.only(bottom: 8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF5F5F5),
-                          shape: BoxShape.circle,
-                        ),
                         child: const Icon(
                           Icons.chat_bubble_outline,
-                          size: 16,
+                          size: 24,
                           color: Color(0xFF535450),
                         ),
                       ),
                       // Menu button
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 42,
+                        height: 42,
                         margin: const EdgeInsets.only(bottom: 8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF5F5F5),
-                          shape: BoxShape.circle,
-                        ),
                         child: const Icon(
                           Icons.menu,
-                          size: 16,
+                          size: 24,
                           color: Color(0xFF535450),
                         ),
                       ),
                       // Folder button
                       Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF5F5F5),
-                          shape: BoxShape.circle,
-                        ),
+                        width: 42,
+                        height: 42,
                         child: const Icon(
                           Icons.folder_outlined,
-                          size: 16,
+                          size: 24,
                           color: Color(0xFF535450),
                         ),
                       ),
@@ -347,148 +323,225 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
       margin: const EdgeInsets.symmetric(horizontal: 64),
       child: Center(
         child: SizedBox(
-          width: 750, // Fixed width for better proportions
-          child: Row(
+          width: 650, // Fixed width for better proportions
+          height: 334,
+          child: Stack(
             children: [
-              // Left side - persona card
-              Container(
-                width: 400, // Fixed width for card
-                height: 334,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 60,
-                      offset: const Offset(0, 0),
+              // Background image (full width)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    image: DecorationImage(
+                      image: AssetImage(persona.backgroundAsset),
+                      //fit: BoxFit.cover,
+                      alignment: AlignmentDirectional(2.5, -0.5),
+                      //fit: BoxFit.cover,
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Persona counter
-                      Text(
-                        'Persona ${index + 1}/5',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w200,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Persona name
-                      Text(
-                        persona.name,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                          height: 1.0,
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Description
-                      Expanded(
-                        child: Text(
-                          persona.description,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Go button
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => OrizonChatBotPage(
-                                  selectedPersona: persona,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                            child: const Text(
-                              'Go',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w200,
-                                fontFamily: 'NouvelR',
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),
 
-              const SizedBox(width: 24),
-
-              // Right side - background image with sphere
-              Container(
-                width: 320, // Fixed width for image
-                height: 334,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  image: DecorationImage(
-                    image: AssetImage(persona.backgroundAsset),
-                    fit: BoxFit.cover,
+              // Overlaid persona card (left side)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Container(
+                  width: 400, // Fixed width for card
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 60,
+                        offset: const Offset(0, 0),
+                      ),
+                    ],
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    // Sphere icon in bottom right
-                    Positioned(
-                      bottom: 16,
-                      right: 16,
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Image.asset(
-                            persona.sphereAsset,
-                            width: 30,
-                            height: 30,
-                            fit: BoxFit.cover,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Persona counter
+                        Text(
+                          'Persona ${index + 1}/5',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w200,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
                           ),
                         ),
-                      ),
+
+                        const SizedBox(height: 16),
+
+                        // Persona name
+                        Text(
+                          persona.name,
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                            height: 1.0,
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Description
+                        Expanded(
+                          child: Text(
+                            persona.description,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Bottom row with persona selection and Go button
+                        Row(
+                          children: [
+                            // Persona selection indicator
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                    color: const Color(0xFFC4C4C4), width: 0.5),
+                              ),
+                              child: Stack(
+                                children: [
+                                  // Chat icon
+                                  const Positioned(
+                                    left: 6,
+                                    top: 6,
+                                    child: Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 15,
+                                      color: Color(0xFF535450),
+                                    ),
+                                  ),
+                                  // Masked persona sphere
+                                  Positioned(
+                                    left: 1,
+                                    top: 1,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(13),
+                                      child: Container(
+                                        width: 26,
+                                        height: 26,
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image:
+                                                AssetImage(persona.sphereAsset),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            // Persona name text
+                            Expanded(
+                              child: Text(
+                                persona.name,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w200,
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            // Settings icon
+                            const Icon(
+                              Icons.settings,
+                              size: 16,
+                              color: Color(0xFF535450),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            // Go button
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => OrizonChatBotPage(
+                                      selectedPersona: persona,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                                child: const Text(
+                                  'Go',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w200,
+                                    fontFamily: 'NouvelR',
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ),
+              ),
+
+              // Sphere icon in bottom right corner of the image
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border:
+                        Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      persona.sphereAsset,
+                      width: 30,
+                      height: 30,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
             ],
