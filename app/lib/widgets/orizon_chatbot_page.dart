@@ -24,7 +24,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   List<CustomerSegment> _segments = CustomerSegment.getDefaultSegments();
   CustomerSegment? _selectedSegment;
   bool _isLoading = false;
-  bool _hasStartedConversation = false;
   bool _showPersonPanel = false;
   String _selectedOptionMode = 'chat'; // 'chat', 'tree', 'chart'
 
@@ -73,9 +72,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       orElse: () => _segments.first, // Fallback to first segment
     );
 
-    // Automatically select the segment and start conversation
+    // Automatically select the segment
     _selectSegment(matchingSegment);
-    _startConversation();
   }
 
   void _loadRuntimeConfig() {
@@ -111,27 +109,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     });
     // You can add specific logic for each mode here
     print('Selected option mode: $mode');
-  }
-
-  Future<void> _startConversation() async {
-    if (_selectedSegment == null) return;
-
-    // Start screen transition animation
-    _screenTransitionController.forward().then((_) {
-      setState(() {
-        _hasStartedConversation = true;
-      });
-      _screenTransitionController.reset();
-    });
-
-    // Add initial system message about the selected segment
-    final initialMessage = ChatMessage(
-      text:
-          'You have selected: ${_selectedSegment!.name}. How can Orizon assist you today?',
-      isUser: false,
-      timestamp: DateTime.now(),
-    );
-    await _conversationManager.addMessageToCurrentConversation(initialMessage);
   }
 
   Future<void> _sendMessage() async {
@@ -253,166 +230,11 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       backgroundColor: const Color(0xFFE1DFE2),
       body: Stack(
         children: [
-          // Main content
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOut,
-                ),
-                child: child,
-              );
-            },
-            child: _hasStartedConversation
-                ? Container(
-                    key: const ValueKey('chat'), child: _buildChatView())
-                : Container(
-                    key: const ValueKey('segments'),
-                    child: _buildSegmentSelection()),
-          ),
+          // Main content - always show chat view
+          _buildChatView(),
 
           // Person Panel Overlay
           if (_showPersonPanel) _buildPersonPanel(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSegmentSelection() {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE1DFE2),
-      body: Column(
-        children: [
-          // Top Header with ORIZON title (bigger and top left)
-          SafeArea(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'DYNAMIC PERSONA',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      _buildHeaderIcon(Icons.assignment),
-                      const SizedBox(width: 12),
-                      _buildHeaderIcon(Icons.person),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Middle section with segments (vertically centered)
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Title Section
-                  const Column(
-                    children: [
-                      Text(
-                        'Select a customer segment',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Before starting conversation',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w300,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  // Customer Segments - Horizontal Layout
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (int i = 0; i < _segments.length; i++) ...[
-                          _buildSegmentCard(_segments[i]),
-                          if (i < _segments.length - 1)
-                            const SizedBox(width: 24),
-                        ],
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // Edit Icon
-                  const Icon(
-                    Icons.edit,
-                    size: 15,
-                    color: Color(0xFF535450),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Bottom section with chat input
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                // Chat Input Area
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: _buildChatInput(),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Explorer text
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Explorer les cas d\'utilisation',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF8F9893),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.menu,
-                      size: 24,
-                      color: Color(0xFF8F9893),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -439,9 +261,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                     children: [
                       IconButton(
                         onPressed: () {
-                          setState(() {
-                            _hasStartedConversation = false;
-                          });
+                          Navigator.pop(context);
                         },
                         icon: const Icon(Icons.arrow_back, color: Colors.black),
                         splashRadius: 20,
@@ -579,89 +399,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     );
   }
 
-  Widget _buildSegmentCard(CustomerSegment segment) {
-    final isSelected = segment.isSelected;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Segment Button with animation
-        GestureDetector(
-          onTap: () => _selectSegment(segment),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            height: 50,
-            constraints: const BoxConstraints(minWidth: 100, maxWidth: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.black : const Color(0xFFE1E1E3),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: const Color(0xFFC4C4C4),
-                width: 0.5,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 300),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w300,
-                  fontFamily: 'NouvelR',
-                  color: isSelected ? Colors.white : Colors.black,
-                ),
-                child: Text(
-                  segment.name,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Connecting Line
-        Container(
-          height: 24,
-          width: 1,
-          color: const Color(0xFFE1DFE2),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Sphere/Icon
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: segment.id == 'environment_evangelists'
-                ? const RadialGradient(
-                    colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
-                  )
-                : null,
-            color: segment.id != 'environment_evangelists'
-                ? const Color(0xFF4ECDC4)
-                : null,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildChatInput() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -700,9 +437,6 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
               color: Colors.black,
             ),
             onSubmitted: (_) {
-              if (!_hasStartedConversation && _selectedSegment != null) {
-                _startConversation();
-              }
               _sendMessage();
             },
           ),
@@ -729,218 +463,128 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
               const SizedBox(width: 12),
 
-              // Selected segment indicator with edit option - only show after conversation started
-              if (_selectedSegment != null && _hasStartedConversation)
-                Expanded(
-                  child: Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: const Color(0xFFE2E3E8)),
-                    ),
-                    child: Row(
-                      children: [
-                        // Segment indicator with colored circle
-                        Container(
-                          width: 28,
-                          height: 28,
-                          margin: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 2,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: _selectedSegment!.id ==
-                                        'environment_evangelists'
-                                    ? const RadialGradient(
-                                        colors: [
-                                          Color(0xFFFF6B6B),
-                                          Color(0xFF4ECDC4)
-                                        ],
-                                      )
-                                    : null,
-                                color: _selectedSegment!.id !=
-                                        'environment_evangelists'
-                                    ? const Color(0xFF4ECDC4)
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
+              const Spacer(),
 
-                        const SizedBox(width: 8),
-
-                        // Segment name
-                        Expanded(
-                          child: Text(
-                            _selectedSegment!.name,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontFamily: 'NouvelR',
-                              fontWeight: FontWeight.w300,
-                              color: Colors.black,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-
-                        const SizedBox(width: 8),
-
-                        // Edit icon
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _hasStartedConversation = false;
-                            });
-                          },
-                          child: const Icon(
-                            Icons.edit,
-                            size: 15,
-                            color: Color(0xFF535450),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else if (!_hasStartedConversation)
-                // Grouped option icons in pill container (when no conversation started)
-                Container(
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F7F7),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: const Color(0xFFE2E3E8)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Chat bubble icon
-                      GestureDetector(
-                        onTap: () => _selectOptionMode('chat'),
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          margin: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: _selectedOptionMode == 'chat'
-                                ? Colors.white
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                            boxShadow: _selectedOptionMode == 'chat'
-                                ? [
-                                    const BoxShadow(
-                                      color: Color(0x1A000000),
-                                      blurRadius: 2,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: const Icon(
-                            Icons.chat_bubble_outline,
-                            size: 14,
-                            color: Color(0xFF535450),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 4),
-
-                      // Tree icon
-                      GestureDetector(
-                        onTap: () => _selectOptionMode('tree'),
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          margin: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: _selectedOptionMode == 'tree'
-                                ? Colors.white
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                            boxShadow: _selectedOptionMode == 'tree'
-                                ? [
-                                    const BoxShadow(
-                                      color: Color(0x1A000000),
-                                      blurRadius: 2,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: const Icon(
-                            Icons.account_tree_outlined,
-                            size: 14,
-                            color: Color(0xFF535450),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 4),
-
-                      // Bar chart icon
-                      GestureDetector(
-                        onTap: () => _selectOptionMode('chart'),
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          margin: const EdgeInsets.only(
-                              right: 4, top: 2, bottom: 2, left: 2),
-                          decoration: BoxDecoration(
-                            color: _selectedOptionMode == 'chart'
-                                ? Colors.white
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                            boxShadow: _selectedOptionMode == 'chart'
-                                ? [
-                                    const BoxShadow(
-                                      color: Color(0x1A000000),
-                                      blurRadius: 2,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: const Icon(
-                            Icons.bar_chart,
-                            size: 14,
-                            color: Color(0xFF535450),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              // Grouped option icons in pill container (when no conversation started)
+              Container(
+                height: 32,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F7F7),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(color: const Color(0xFFE2E3E8)),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Chat bubble icon
+                    GestureDetector(
+                      onTap: () => _selectOptionMode('chat'),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: _selectedOptionMode == 'chat'
+                              ? Colors.white
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                          boxShadow: _selectedOptionMode == 'chat'
+                              ? [
+                                  const BoxShadow(
+                                    color: Color(0x1A000000),
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 14,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    // Tree icon
+                    GestureDetector(
+                      onTap: () => _selectOptionMode('tree'),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: _selectedOptionMode == 'tree'
+                              ? Colors.white
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                          boxShadow: _selectedOptionMode == 'tree'
+                              ? [
+                                  const BoxShadow(
+                                    color: Color(0x1A000000),
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: const Icon(
+                          Icons.account_tree_outlined,
+                          size: 14,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    // Bar chart icon
+                    GestureDetector(
+                      onTap: () => _selectOptionMode('chart'),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        margin: const EdgeInsets.only(
+                            right: 4, top: 2, bottom: 2, left: 2),
+                        decoration: BoxDecoration(
+                          color: _selectedOptionMode == 'chart'
+                              ? Colors.white
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                          boxShadow: _selectedOptionMode == 'chart'
+                              ? [
+                                  const BoxShadow(
+                                    color: Color(0x1A000000),
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: const Icon(
+                          Icons.bar_chart,
+                          size: 14,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
               const Spacer(),
 
               // Send Button - Arrow before first message, "Go" text after
               GestureDetector(
                 onTap: () {
-                  if (!_hasStartedConversation && _selectedSegment != null) {
-                    _startConversation();
-                  }
                   _sendMessage();
                 },
                 child: Container(
                   height: 32,
                   padding: EdgeInsets.symmetric(
-                    horizontal: !_hasStartedConversation ? 8 : 16,
+                    horizontal: 16,
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF535450),
@@ -949,21 +593,15 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                         Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
                   ),
                   child: Center(
-                    child: !_hasStartedConversation
-                        ? const Icon(
-                            Icons.keyboard_arrow_up,
-                            size: 20,
-                            color: Colors.white,
-                          )
-                        : const Text(
-                            'Go',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontFamily: 'NouvelR',
-                              fontWeight: FontWeight.w300,
-                              color: Colors.white,
-                            ),
-                          ),
+                    child: const Text(
+                      'Go',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'NouvelR',
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
