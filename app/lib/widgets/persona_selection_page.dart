@@ -15,13 +15,11 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
   List<PersonaData> personas = PersonaData.getPersonas();
   bool _showDescriptionView = false;
 
-  // Slider values for description view
-  double _housingCondition = 50;
-  double _income = 50;
-  double _population = 50;
-  double _age = 50;
-
-  @override
+  // Slider values for description view (starting at mid-point for each range)
+  double _housingCondition = 4.0; // Range 1-8, mid-point = 4
+  double _income = 7.0; // Range 1-13, mid-point = 7
+  double _population = 3.0; // Range 1-5, mid-point = 3
+  double _age = 5.0; // Range 1-10, mid-point = 5  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -578,37 +576,86 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
   Widget _buildDescriptionSliders() {
     return Column(
       children: [
-        // Housing Condition Slider
+        // Housing Condition Slider (1-8)
         _buildSlider(
           'Housing Condition',
           _housingCondition,
           (value) => setState(() => _housingCondition = value),
+          [
+            'Apartment renter (no dedicated parking)',
+            'Apartment renter (dedicated parking)',
+            'Apartment owner (no dedicated parking)',
+            'Apartment owner (dedicated parking)',
+            'House renter (no dedicated parking)',
+            'House renter (dedicated parking)',
+            'House owner (no dedicated parking)',
+            'House owner (dedicated parking)'
+          ],
         ),
 
-        // Income Slider
+        // Income Slider (1-13)
         _buildSlider(
           'Income',
           _income,
           (value) => setState(() => _income = value),
+          [
+            '< 1000€',
+            '1000€ - 2000€',
+            '2001€ - 3000€',
+            '3001€ - 4000€',
+            '4001€ - 5000€',
+            '5001€ - 6000€',
+            '6001€ - 7000€',
+            '7001€ - 8000€',
+            '8001€ - 9000€',
+            '9001€ - 10000€',
+            '10001€ - 11000€',
+            '11001€ - 12000€',
+            '> 12000€'
+          ],
         ),
-        // Population Slider
+
+        // Population Slider (1-5)
         _buildSlider(
           'Population',
           _population,
           (value) => setState(() => _population = value),
+          [
+            '< 5,000 people',
+            '5,000 - 49,999 people',
+            '50,000 - 249,999 people',
+            '250,000 - 1 million people',
+            '> 1 million people'
+          ],
         ),
 
-        // Age Slider
+        // Age Slider (1-10)
         _buildSlider(
           'Age',
           _age,
           (value) => setState(() => _age = value),
+          [
+            '18-24 years',
+            '25-29 years',
+            '30-34 years',
+            '35-39 years',
+            '40-44 years',
+            '45-49 years',
+            '50-54 years',
+            '55-59 years',
+            '60-64 years',
+            '65-75 years'
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildSlider(String title, double value, Function(double) onChanged) {
+  Widget _buildSlider(String title, double value, Function(double) onChanged,
+      List<String> labels) {
+    // Convert value to index (0-based) for labels array
+    int labelIndex = (value - 1).round().clamp(0, labels.length - 1);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -626,7 +673,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
               ),
             ),
             Text(
-              '${value.round()}',
+              labels[labelIndex],
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
@@ -648,8 +695,9 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
           ),
           child: Slider(
             value: value,
-            min: 0,
-            max: 100,
+            min: 1,
+            max: labels.length.toDouble(),
+            divisions: labels.length - 1,
             onChanged: onChanged,
           ),
         ),
