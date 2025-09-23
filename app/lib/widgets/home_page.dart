@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'orizon_chatbot_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,12 +13,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  String? _selectedExperience;
   late VideoPlayerController _videoController;
   bool _isVideoInitialized = false;
   bool _useVideoPlayer = true;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  Timer? _longPressTimer;
 
   @override
   void initState() {
@@ -91,322 +92,309 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     _videoController.dispose();
     _animationController.dispose();
+    _longPressTimer?.cancel();
     super.dispose();
-  }
-
-  void _selectExperience(String experience) {
-    setState(() {
-      _selectedExperience = experience;
-    });
-
-    // Navigate to the appropriate page based on selection
-    if (experience == 'Home') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const OrizonChatBotPage(),
-        ),
-      );
-    } else if (experience == 'About') {
-      // Future implementation for About page
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('About page coming soon!'),
-          backgroundColor: Color(0xFF535450),
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
-      body: Stack(
-        children: [
-          // Main content overlay
-          SafeArea(
-            child: Column(
-              children: [
-                // Header section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header navigation
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Left side - Navigation tabs
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildExperienceTab('Home'),
-                              const SizedBox(width: 20),
-                              _buildExperienceTab('About'),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // DYNAMIC PERSONA title - exactly as in Figma
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'DYNAMIC',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700, // Bold
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
-                          const Text(
-                            'PERSONA',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w300, // Book
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Center content with sphere animation behind text
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final screenWidth = constraints.maxWidth;
-                      final screenHeight = constraints.maxHeight;
-
-                      return Stack(
-                        children: [
-                          // Background sphere animation positioned behind and slightly left/bottom of text
-                          Positioned(
-                            left: 0, // More to the left
-                            bottom: 0, // Higher up
-                            child: SizedBox(
-                              width: screenHeight *
-                                  1.5, // Much larger to match screenshot proportions
-                              // height:
-                              //     screenHeight * 1.0, // Square aspect, larger
-                              child: _useVideoPlayer && _isVideoInitialized
-                                  ? ClipRRect(
-                                      child: AspectRatio(
-                                        aspectRatio: 1.23, // Square
-                                        child: VideoPlayer(_videoController),
-                                      ),
-                                    )
-                                  : AnimatedBuilder(
-                                      animation: _scaleAnimation,
-                                      builder: (context, child) {
-                                        return Transform.scale(
-                                          scale: _scaleAnimation.value,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(325),
-                                              gradient: const LinearGradient(
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                                colors: [
-                                                  Color(0xFFE8E6E9),
-                                                  Color(0xFFDDD9DD),
-                                                  Color(0xFFD1CCD1),
-                                                  Color(0xFFE8E6E9),
-                                                ],
-                                                stops: [0.0, 0.3, 0.7, 1.0],
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.1),
-                                                  blurRadius: 20,
-                                                  offset: const Offset(0, 10),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                            ),
-                          ),
-
-                          // Welcome message centered horizontally
-                          Positioned(
-                            left: screenWidth * 0.5 -
-                                195, // Center the text block (approximate width 350px)
-                            top: screenHeight * 0.34, // Keep vertical position
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Welcome message
-                                RichText(
-                                  text: const TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'welcome, ',
-                                        style: TextStyle(
-                                          fontSize: 48,
-                                          fontWeight: FontWeight.w400,
-                                          fontFamily: 'NouvelR',
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: 'Nathalie',
-                                        style: TextStyle(
-                                            fontSize: 48,
-                                            fontWeight: FontWeight.w300,
-                                            fontFamily: 'NouvelR',
-                                            color: Colors.black,
-                                            decoration:
-                                                TextDecoration.underline),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Interaction instructions centered below welcome text
-                          Positioned(
-                            left: screenWidth * 0.5 -
-                                120, // Center the instructions (approximate width 245px)
-                            top: screenHeight * 0.41, // Below welcome text
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Click to type',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(width: 24),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF535450),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 24),
-                                const Text(
-                                  'Press and hold',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Right sidebar with CTAs - matching Figma design
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 40,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+      body: GestureDetector(
+        onTapDown: (details) {
+          // Start the 3-second timer when user presses down
+          _longPressTimer = Timer(const Duration(seconds: 2), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const OrizonChatBotPage(),
               ),
+            );
+          });
+        },
+        onTapUp: (details) {
+          // Cancel the timer if user releases before 3 seconds
+          _longPressTimer?.cancel();
+        },
+        onTapCancel: () {
+          // Cancel the timer if tap is cancelled (e.g., user drags away)
+          _longPressTimer?.cancel();
+        },
+        child: Stack(
+          children: [
+            // Main content overlay
+            SafeArea(
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
-                  // CTA buttons
-                  Column(
-                    children: [
-                      // Menu button
-                      Container(
-                        width: 32,
-                        height: 32,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF5F5F5),
-                          shape: BoxShape.circle,
+                  // Header section
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.only(top: 24, left: 80, right: 80),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header navigation
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Left side - Navigation tabs
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildExperienceTab('Home'),
+                                const SizedBox(width: 20),
+                                _buildExperienceTab('About'),
+                              ],
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.menu,
-                          size: 16,
-                          color: Color(0xFF535450),
+
+                        const SizedBox(height: 28),
+
+                        // DYNAMIC PERSONA title - exactly as in Figma
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'DYNAMIC',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700, // Bold
+                                fontFamily: 'NouvelR',
+                                color: Colors.black,
+                              ),
+                            ),
+                            const Text(
+                              'PERSONA',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w300, // Book
+                                fontFamily: 'NouvelR',
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      // Message button
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF5F5F5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.chat_bubble_outline,
-                          size: 16,
-                          color: Color(0xFF535450),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+
+                  // Center content with sphere animation behind text
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final screenWidth = constraints.maxWidth;
+                        final screenHeight = constraints.maxHeight;
+
+                        return Stack(
+                          children: [
+                            // Background sphere animation positioned behind and slightly left/bottom of text
+                            Positioned(
+                              left: 0, // More to the left
+                              bottom: 0, // Higher up
+                              child: SizedBox(
+                                width: screenHeight *
+                                    1.5, // Much larger to match screenshot proportions
+                                // height:
+                                //     screenHeight * 1.0, // Square aspect, larger
+                                child: _useVideoPlayer && _isVideoInitialized
+                                    ? ClipRRect(
+                                        child: AspectRatio(
+                                          aspectRatio: 1.23, // Square
+                                          child: VideoPlayer(_videoController),
+                                        ),
+                                      )
+                                    : AnimatedBuilder(
+                                        animation: _scaleAnimation,
+                                        builder: (context, child) {
+                                          return Transform.scale(
+                                            scale: _scaleAnimation.value,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(325),
+                                                gradient: const LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [
+                                                    Color(0xFFE8E6E9),
+                                                    Color(0xFFDDD9DD),
+                                                    Color(0xFFD1CCD1),
+                                                    Color(0xFFE8E6E9),
+                                                  ],
+                                                  stops: [0.0, 0.3, 0.7, 1.0],
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    blurRadius: 20,
+                                                    offset: const Offset(0, 10),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ),
+
+                            // Welcome message centered horizontally
+                            Positioned(
+                              left: screenWidth * 0.5 -
+                                  195, // Center the text block (approximate width 350px)
+                              top:
+                                  screenHeight * 0.34, // Keep vertical position
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Welcome message
+                                  RichText(
+                                    text: const TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: 'welcome, ',
+                                          style: TextStyle(
+                                            fontSize: 48,
+                                            fontWeight: FontWeight.w400,
+                                            fontFamily: 'NouvelR',
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: 'Nathalie',
+                                          style: TextStyle(
+                                              fontSize: 48,
+                                              fontWeight: FontWeight.w300,
+                                              fontFamily: 'NouvelR',
+                                              color: Colors.black,
+                                              decoration:
+                                                  TextDecoration.underline),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Interaction instructions centered below welcome text
+                            Positioned(
+                              left: screenWidth * 0.5 -
+                                  120, // Center the instructions (approximate width 245px)
+                              top: screenHeight * 0.41, // Below welcome text
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    'Click to type',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'NouvelR',
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF535450),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  const Text(
+                                    'Press and hold',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'NouvelR',
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
+
+            // Right sidebar with CTAs - matching Figma design
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 60,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60),
+                    // CTA buttons
+                    Column(
+                      children: [
+                        // Menu button
+                        Container(
+                          width: 42,
+                          height: 42,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: const Icon(
+                            Icons.menu,
+                            size: 24,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Message button
+                        Container(
+                          width: 42,
+                          height: 42,
+                          child: const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 24,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ), // Closing GestureDetector
     );
   }
 
   Widget _buildExperienceTab(String experience) {
-    final isSelected = _selectedExperience == experience;
-
-    return GestureDetector(
-      onTap: () => _selectExperience(experience),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF535450) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF535450) : Colors.transparent,
-            width: 1,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.transparent,
+          width: 1,
         ),
-        child: Text(
-          experience,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight:
-                experience == 'Home' ? FontWeight.bold : FontWeight.w300,
-            fontFamily: 'NouvelR',
-            color: isSelected ? Colors.white : Colors.black,
-          ),
+      ),
+      child: Text(
+        experience,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: experience == 'Home' ? FontWeight.bold : FontWeight.w300,
+          fontFamily: 'NouvelR',
+          color: Colors.black,
         ),
       ),
     );
