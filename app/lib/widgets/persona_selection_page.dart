@@ -136,55 +136,57 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         },
                       ),
 
-                      // Left navigation arrow
-                      Positioned(
-                        left: 60,
-                        top: MediaQuery.of(context).size.height * 0.4,
-                        child: GestureDetector(
-                          onTap: () {
-                            if (_currentIndex > 0) {
-                              _pageController.previousPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            }
-                          },
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Color(0xFF535450),
-                              size: 48,
+                      // Left navigation arrow (only show if not on first card)
+                      if (_currentIndex > 0)
+                        Positioned(
+                          left: 60,
+                          top: MediaQuery.of(context).size.height * 0.4,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (_currentIndex > 0) {
+                                _pageController.previousPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              child: const Icon(
+                                Icons.arrow_back,
+                                color: Color(0xFF535450),
+                                size: 48,
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      // Right navigation arrow
-                      Positioned(
-                        right: 120,
-                        top: MediaQuery.of(context).size.height * 0.4,
-                        child: GestureDetector(
-                          onTap: () {
-                            if (_currentIndex < personas.length - 1) {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            }
-                          },
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            child: const Icon(
-                              Icons.arrow_forward,
-                              color: Color(0xFF535450),
-                              size: 48,
+                      // Right navigation arrow (only show if not on last card)
+                      if (_currentIndex < personas.length - 1)
+                        Positioned(
+                          right: 120,
+                          top: MediaQuery.of(context).size.height * 0.4,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (_currentIndex < personas.length - 1) {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              child: const Icon(
+                                Icons.arrow_forward,
+                                color: Color(0xFF535450),
+                                size: 48,
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
                       // Fixed carousel indicators positioned under the persona cards
                       Positioned(
