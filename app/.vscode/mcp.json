@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"Figma MCP Server": {
+			"url": "http://192.168.17.129:3845/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

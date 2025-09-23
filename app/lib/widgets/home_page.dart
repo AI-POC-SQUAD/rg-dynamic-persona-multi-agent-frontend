@@ -131,13 +131,13 @@ class _HomePageState extends State<HomePage>
                 // Header section
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header navigation
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // Left side - Navigation tabs
                           Row(
@@ -177,19 +177,6 @@ class _HomePageState extends State<HomePage>
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 8),
-
-                      // Subtitle
-                      const Text(
-                        'L\'(a)vie de nos clients, en conversation',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w300,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -209,9 +196,9 @@ class _HomePageState extends State<HomePage>
                             bottom: 0, // Higher up
                             child: SizedBox(
                               width: screenHeight *
-                                  0.7, // Much larger to match screenshot proportions
-                              height:
-                                  screenHeight * 0.7, // Square aspect, larger
+                                  1.5, // Much larger to match screenshot proportions
+                              // height:
+                              //     screenHeight * 1.0, // Square aspect, larger
                               child: _useVideoPlayer && _isVideoInitialized
                                   ? ClipRRect(
                                       child: AspectRatio(
@@ -414,8 +401,9 @@ class _HomePageState extends State<HomePage>
         child: Text(
           experience,
           style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w300,
+            fontSize: 15,
+            fontWeight:
+                experience == 'Home' ? FontWeight.bold : FontWeight.w300,
             fontFamily: 'NouvelR',
             color: isSelected ? Colors.white : Colors.black,
           ),
