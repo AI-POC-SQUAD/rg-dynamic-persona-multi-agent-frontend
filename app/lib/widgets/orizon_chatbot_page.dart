@@ -115,7 +115,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     return Center(
       child: Container(
         width: 760,
-        height: 200,
+        constraints: const BoxConstraints(minHeight: 200),
         child: _buildChatInputContainer(),
       ),
     );
@@ -148,7 +148,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
           padding: const EdgeInsets.all(20),
           child: Container(
             width: 760,
-            height: 200,
+            constraints: const BoxConstraints(minHeight: 150),
             child: _buildChatInputContainer(),
           ),
         ),
@@ -171,12 +171,13 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Title
-          const Text(
-            'Ask Environment evangelist',
-            style: TextStyle(
+          Text(
+            'Ask ${widget.selectedPersona?.name ?? 'ORIZON'}',
+            style: const TextStyle(
               fontSize: 16,
               fontFamily: 'NouvelR',
               fontWeight: FontWeight.w400,
@@ -199,78 +200,80 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
               fontFamily: 'NouvelR',
               color: Colors.transparent,
             ),
-            maxLines: 3,
+            maxLines: 2,
             onSubmitted: (_) => _sendMessage(),
           ),
 
-          const Spacer(),
+          const SizedBox(height: 16),
 
           // Bottom row with segment and button
           Row(
             children: [
               // Segment selector
-              Container(
-                height: 28,
-                padding: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(100),
-                  border:
-                      Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Persona indicator circle
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: const Color(0xFFC4C4C4), width: 0.5),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
+              Flexible(
+                child: Container(
+                  height: 28,
+                  padding: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
+                    border:
+                        Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Persona indicator circle
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: const Color(0xFFC4C4C4), width: 0.5),
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                    // Segment name
-                    const Text(
-                      'EV Skeptic',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontFamily: 'NouvelR',
-                        fontWeight: FontWeight.w300,
-                        color: Colors.black,
+                      // Segment name
+                      Text(
+                        widget.selectedPersona?.name ?? 'ORIZON',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'NouvelR',
+                          fontWeight: FontWeight.w300,
+                          color: Colors.black,
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                    // Settings icon
-                    const Icon(
-                      Icons.settings,
-                      size: 16,
-                      color: Color(0xFF535450),
-                    ),
-                  ],
+                      // Settings icon
+                      const Icon(
+                        Icons.settings,
+                        size: 16,
+                        color: Color(0xFF535450),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(width: 12),
 
               // Go button
               GestureDetector(
@@ -298,7 +301,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Explorer link
           const Center(
@@ -537,25 +540,140 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         _conversationManager.currentConversation?.messages.isNotEmpty ?? false;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Dynamic Persona',
-          style: TextStyle(
-            color: Colors.black,
-            fontFamily: 'NouvelR',
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
+      backgroundColor: const Color(0xFFE1DFE2),
+      body: Stack(
+        children: [
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                // Header section (matching persona selection page)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top row with title and close button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // DYNAMIC PERSONA title (matching Figma layout)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'DYNAMIC',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w700, // Bold
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.black,
+                                  height: 1.0,
+                                ),
+                              ),
+                              const Text(
+                                'PERSONA',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w300, // Book weight
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.black,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: const Color(0xFFC4C4C4), width: 0.5),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Color(0xFF535450),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Chat content area
+                Expanded(
+                  child: hasMessages
+                      ? _buildChatWithMessages()
+                      : _buildEmptyChat(),
+                ),
+              ],
+            ),
           ),
-        ),
+
+          // Right sidebar (matching persona selection page)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 60,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 60),
+                  // CTA buttons
+                  Column(
+                    children: [
+                      // Message button
+                      Container(
+                        width: 42,
+                        height: 42,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 24,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                      // Menu button
+                      Container(
+                        width: 42,
+                        height: 42,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: const Icon(
+                          Icons.menu,
+                          size: 24,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                      // Folder button
+                      Container(
+                        width: 42,
+                        height: 42,
+                        child: const Icon(
+                          Icons.folder_outlined,
+                          size: 24,
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      body: hasMessages ? _buildChatWithMessages() : _buildEmptyChat(),
     );
   }
 }
