@@ -113,10 +113,74 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
   Widget _buildEmptyChat() {
     return Center(
-      child: Container(
-        width: 760,
-        constraints: const BoxConstraints(minHeight: 200),
-        child: _buildChatInputContainer(),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // White chat rectangle with Go button on the right
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 900, // Made wider (was 760)
+                constraints: const BoxConstraints(minHeight: 200),
+                child: _buildChatInputContainer(),
+              ),
+              const SizedBox(width: 16),
+              // Go button positioned to the right of white rectangle
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 24), // Align with container padding
+                child: GestureDetector(
+                  onTap: _sendMessage,
+                  child: Container(
+                    height: 32,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF535450),
+                      borderRadius: BorderRadius.circular(32),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Go',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'NouvelR',
+                          fontWeight: FontWeight.w300,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Explorer text below the white rectangle
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Explorer les cas d\'utilisation',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontFamily: 'NouvelR',
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(width: 8),
+              Icon(
+                Icons.format_list_bulleted,
+                size: 16,
+                color: Colors.black,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -143,13 +207,76 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
           ),
         ),
 
-        // Input container at bottom
+        // Input container at bottom with Go button on the right
         Container(
           padding: const EdgeInsets.all(20),
-          child: Container(
-            width: 760,
-            constraints: const BoxConstraints(minHeight: 150),
-            child: _buildChatInputContainer(),
+          child: Column(
+            children: [
+              // White chat rectangle with Go button on the right
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 900, // Made wider (was 760)
+                    constraints: const BoxConstraints(minHeight: 150),
+                    child: _buildChatInputContainer(),
+                  ),
+                  const SizedBox(width: 16),
+                  // Go button positioned to the right of white rectangle
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        top: 24), // Align with container padding
+                    child: GestureDetector(
+                      onTap: _sendMessage,
+                      child: Container(
+                        height: 32,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF535450),
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Go',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontFamily: 'NouvelR',
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Explorer text below the white rectangle
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Explorer les cas d\'utilisation',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontFamily: 'NouvelR',
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(
+                    Icons.format_list_bulleted,
+                    size: 16,
+                    color: Colors.black,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ],
@@ -206,122 +333,62 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
           const SizedBox(height: 16),
 
-          // Bottom row with segment and button
-          Row(
-            children: [
-              // Segment selector
-              Flexible(
-                child: Container(
+          // Bottom row with segment selector only
+          Container(
+            height: 28,
+            padding: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Persona indicator circle
+                Container(
+                  width: 28,
                   height: 28,
-                  padding: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(100),
+                    shape: BoxShape.circle,
                     border:
                         Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Persona indicator circle
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: const Color(0xFFC4C4C4), width: 0.5),
+                  child: Center(
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
                         ),
-                        child: Center(
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Segment name
-                      Text(
-                        widget.selectedPersona?.name ?? 'ORIZON',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontFamily: 'NouvelR',
-                          fontWeight: FontWeight.w300,
-                          color: Colors.black,
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Settings icon
-                      const Icon(
-                        Icons.settings,
-                        size: 16,
-                        color: Color(0xFF535450),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Go button
-              GestureDetector(
-                onTap: _sendMessage,
-                child: Container(
-                  height: 32,
-                  width: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF535450),
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Go',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontFamily: 'NouvelR',
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 12),
+                const SizedBox(width: 8),
 
-          // Explorer link
-          const Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+                // Segment name
                 Text(
-                  'Explorer les cas d\'utilisation',
-                  style: TextStyle(
-                    fontSize: 10,
+                  widget.selectedPersona?.name ?? 'ORIZON',
+                  style: const TextStyle(
+                    fontSize: 13,
                     fontFamily: 'NouvelR',
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w300,
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(
-                  Icons.format_list_bulleted,
+
+                const SizedBox(width: 8),
+
+                // Settings icon
+                const Icon(
+                  Icons.settings,
                   size: 16,
-                  color: Colors.black,
+                  color: Color(0xFF535450),
                 ),
               ],
             ),
