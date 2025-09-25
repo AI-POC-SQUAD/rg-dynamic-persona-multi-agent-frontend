@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
-import 'orizon_chatbot_page.dart';
 
 class FocusPersonaSelectionPage extends StatefulWidget {
   const FocusPersonaSelectionPage({super.key});
@@ -16,11 +15,28 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
   List<PersonaData> personas = PersonaData.getPersonas();
   bool _showDescriptionView = false;
 
+  // Selected personas for focus group (max 5)
+  List<PersonaData> _selectedPersonas = [];
+
   // Slider values for description view (starting at mid-point for each range)
   double _housingCondition = 4.0; // Range 1-8, mid-point = 4
   double _income = 7.0; // Range 1-13, mid-point = 7
   double _population = 3.0; // Range 1-5, mid-point = 3
-  double _age = 5.0; // Range 1-10, mid-point = 5  @override
+  double _age = 5.0; // Range 1-10, mid-point = 5
+
+  void _selectPersona(PersonaData persona) {
+    setState(() {
+      if (_selectedPersonas.contains(persona)) {
+        _selectedPersonas.remove(persona);
+      } else if (_selectedPersonas.length < 5) {
+        _selectedPersonas.add(persona);
+      }
+    });
+  }
+
+  bool get _isStartButtonEnabled => _selectedPersonas.length >= 2;
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -243,29 +259,10 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                   ),
                 ),
 
-                // Bottom text
+                // Selected personas display and Start button
                 Container(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Explorer les cas d\'utilisation',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w300,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.keyboard_arrow_up,
-                        color: Colors.black,
-                        size: 16,
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: _buildSelectedPersonasDisplay(),
                 ),
               ],
             ),
@@ -505,28 +502,23 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
 
                             const SizedBox(width: 16),
 
-                            // Go button
+                            // Select persona button
                             GestureDetector(
-                              onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => OrizonChatBotPage(
-                                      selectedPersona: persona,
-                                    ),
-                                  ),
-                                );
-                              },
+                              onTap: () => _selectPersona(persona),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.black,
+                                  color: _selectedPersonas.contains(persona)
+                                      ? const Color(0xFF535450)
+                                      : Colors.black,
                                   borderRadius: BorderRadius.circular(32),
                                 ),
-                                child: const Text(
-                                  'Select this Persona',
-                                  style: TextStyle(
+                                child: Text(
+                                  _selectedPersonas.contains(persona)
+                                      ? 'Selected'
+                                      : 'Select this Persona',
+                                  style: const TextStyle(
                                     fontSize: 21,
                                     fontWeight: FontWeight.w200,
                                     fontFamily: 'NouvelR',
@@ -701,6 +693,116 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
             divisions: labels.length - 1,
             onChanged: onChanged,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSelectedPersonasDisplay() {
+    return Column(
+      children: [
+        // "Your selection" text
+        const Text(
+          'Your selection',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w300,
+            fontFamily: 'NouvelR',
+            color: Colors.black,
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Row with numbered circles and Start button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 5 numbered circles for persona selection
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(5, (index) {
+                final bool hasPersona = index < _selectedPersonas.length;
+                return Container(
+                  width: 28,
+                  height: 28,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: hasPersona ? Colors.white : const Color(0xFFC4C4C4),
+                    shape: BoxShape.circle,
+                    border: hasPersona
+                        ? Border.all(color: const Color(0xFF535450), width: 1)
+                        : null,
+                  ),
+                  child: Stack(
+                    children: [
+                      // Persona sphere background (if selected)
+                      if (hasPersona)
+                        Positioned.fill(
+                          child: ClipOval(
+                            child: Image.asset(
+                              _selectedPersonas[index].sphereAsset,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      // Number overlay
+                      Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'NouvelR',
+                            color: hasPersona
+                                ? Colors.white
+                                : const Color(0xFFC4C4C4),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+
+            const SizedBox(width: 32),
+
+            // Start button
+            GestureDetector(
+              onTap: _isStartButtonEnabled
+                  ? () {
+                      // TODO: Navigate to next step
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Starting focus group with ${_selectedPersonas.length} personas'),
+                          backgroundColor: const Color(0xFF535450),
+                        ),
+                      );
+                    }
+                  : null,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _isStartButtonEnabled
+                      ? const Color(0xFF535450)
+                      : const Color(0xFFC4C4C4),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: Text(
+                  'Start',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                    fontFamily: 'NouvelR',
+                    color: _isStartButtonEnabled ? Colors.white : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
