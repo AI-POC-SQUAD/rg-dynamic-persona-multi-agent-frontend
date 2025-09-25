@@ -105,7 +105,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                       const Column(
                         children: [
                           Text(
-                            'Select a customer segment',
+                            'Select a segment to converse',
                             style: TextStyle(
                               fontSize: 40,
                               fontWeight: FontWeight.normal,
@@ -116,7 +116,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Before starting conversation',
+                            'Before starting focus group',
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w300,
@@ -525,7 +525,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                                   borderRadius: BorderRadius.circular(32),
                                 ),
                                 child: const Text(
-                                  'Go',
+                                  'Select this Persona',
                                   style: TextStyle(
                                     fontSize: 21,
                                     fontWeight: FontWeight.w200,
