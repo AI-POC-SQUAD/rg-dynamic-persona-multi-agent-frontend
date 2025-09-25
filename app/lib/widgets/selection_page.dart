@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'persona_selection_page.dart';
+import 'focus_persona_selection_page.dart';
 
 class SelectionPage extends StatefulWidget {
   const SelectionPage({super.key});
@@ -121,25 +122,6 @@ class _SelectionPageState extends State<SelectionPage> {
                             top: screenHeight * 0.325,
                             child: Row(
                               children: [
-                                // Focus Group card
-                                _buildModeCard(
-                                  title: 'Focus Group',
-                                  description:
-                                      'Launch a debate between multiple customer segments and get a synthesis of their combined perspectives.',
-                                  onPressed: () {
-                                    // TODO: Implement Focus Group functionality
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('Focus Group coming soon!'),
-                                        backgroundColor: Color(0xFF535450),
-                                      ),
-                                    );
-                                  },
-                                ),
-
-                                const SizedBox(width: 48),
-
                                 // Conversational card
                                 _buildModeCard(
                                   title: 'Conversational',
@@ -151,6 +133,24 @@ class _SelectionPageState extends State<SelectionPage> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             const PersonaSelectionPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                const SizedBox(width: 48),
+
+                                // Focus Group card
+                                _buildModeCard(
+                                  title: 'Focus Group',
+                                  description:
+                                      'Launch a debate between multiple customer segments and get a synthesis of their combined perspectives.',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const FocusPersonaSelectionPage(),
                                       ),
                                     );
                                   },
