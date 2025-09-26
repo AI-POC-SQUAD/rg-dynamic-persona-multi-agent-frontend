@@ -59,13 +59,14 @@ class ApiClient {
     return config?['IAP_MODE'] == true;
   }
 
-  /// Send a chat message to the backend with conversation context
+  /// Send a chat message to the backend with conversation context and profile
   Future<Map<String, dynamic>> sendChatMessage(
     String message,
     String userId, {
     String? conversationId,
     List<Map<String, dynamic>>? conversationHistory,
     int maxHistoryMessages = 10,
+    Map<String, dynamic>? profile,
   }) async {
     try {
       final url = '${_getApiUrl}/chat';
@@ -103,11 +104,16 @@ class ApiClient {
               ? conversationHistory.take(maxHistoryMessages).toList()
               : <Map<String, dynamic>>[];
 
-      // Build request payload with conversation context
+      // Build request payload with conversation context and profile
       final requestPayload = <String, dynamic>{
         'query': message,
         'user_id': userId,
       };
+
+      // Add profile information if available
+      if (profile != null) {
+        requestPayload['profile'] = profile;
+      }
 
       // Add conversation context if available
       if (conversationId != null) {
@@ -127,6 +133,10 @@ class ApiClient {
       print(
           '💬 Conversation ID: ${requestPayload['conversation_id'] ?? 'None'}');
       print('📚 Context messages: ${limitedHistory.length}');
+      if (profile != null) {
+        print(
+            '👥 Profile: ${profile['name']} (housing: ${profile['housing_condition']}, income: ${profile['income']}, age: ${profile['age']}, population: ${profile['population']})');
+      }
       if (limitedHistory.isNotEmpty) {
         final lastContent = limitedHistory.last['content']?.toString() ?? '';
         final preview = lastContent.length > 50

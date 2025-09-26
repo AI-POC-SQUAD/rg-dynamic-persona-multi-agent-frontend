@@ -26,7 +26,11 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   CustomerSegment? _selectedSegment;
 // 'chat', 'tree', 'chart'
 
-  // Slider values for persona criteria
+  // Slider values for persona criteria (starting at mid-point for each range)
+  double _housingCondition = 4.0; // Range 1-8, mid-point = 4
+  double _income = 7.0; // Range 1-13, mid-point = 7
+  double _population = 3.0; // Range 1-5, mid-point = 3
+  double _age = 5.0; // Range 1-10, mid-point = 5
 
   // Animation controllers
 
@@ -499,6 +503,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         userId,
         conversationId: currentConversation?.id,
         conversationHistory: contextualHistory,
+        profile: _buildProfile(),
       );
 
       final answerText = response['answer'] ??
@@ -695,5 +700,27 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         ],
       ),
     );
+  }
+
+  /// Build profile object for API request
+  Map<String, dynamic> _buildProfile() {
+    // Get persona name from selected persona, fallback to default
+    String personaName = 'status_driven_commuters_base'; // default
+    if (widget.selectedPersona != null) {
+      personaName = widget.selectedPersona!.backendPersonaName;
+    }
+
+    // Convert population value (1->5, 2->4, 3->3, 4->2, 5->1)
+    int invertedPopulation = (6 - _population.round());
+
+    return {
+      'name': personaName,
+      'housing_condition': _housingCondition.round(),
+      'income': _income.round(),
+      'age': _age.round(),
+      'population': invertedPopulation,
+      'gender': 'male', // Fixed as per requirement
+      'threshold': 50.0, // Fixed as per requirement
+    };
   }
 }
