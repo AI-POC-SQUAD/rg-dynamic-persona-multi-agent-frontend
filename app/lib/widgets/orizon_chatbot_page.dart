@@ -8,8 +8,20 @@ import '../models/conversation.dart';
 class OrizonChatBotPage extends StatefulWidget {
   final PersonaData? selectedPersona;
   final String? userId;
+  final double? housingCondition;
+  final double? income;
+  final double? population;
+  final double? age;
 
-  const OrizonChatBotPage({super.key, this.selectedPersona, this.userId});
+  const OrizonChatBotPage({
+    super.key,
+    this.selectedPersona,
+    this.userId,
+    this.housingCondition,
+    this.income,
+    this.population,
+    this.age,
+  });
 
   @override
   State<OrizonChatBotPage> createState() => _OrizonChatBotPageState();
@@ -37,6 +49,12 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   @override
   void initState() {
     super.initState();
+
+    // Initialize slider values from constructor or use defaults
+    _housingCondition = widget.housingCondition ?? 4.0;
+    _income = widget.income ?? 7.0;
+    _population = widget.population ?? 3.0;
+    _age = widget.age ?? 5.0;
 
     // Initialize animation controllers
 
@@ -713,7 +731,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     // Convert population value (1->5, 2->4, 3->3, 4->2, 5->1)
     int invertedPopulation = (6 - _population.round());
 
-    return {
+    final profile = {
       'name': personaName,
       'housing_condition': _housingCondition.round(),
       'income': _income.round(),
@@ -722,5 +740,15 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       'gender': 'male', // Fixed as per requirement
       'threshold': 50.0, // Fixed as per requirement
     };
+
+    // Debug logging to verify slider values are being used
+    print('🏗️ Building profile with slider values:');
+    print('   Housing: ${_housingCondition} -> ${_housingCondition.round()}');
+    print('   Income: ${_income} -> ${_income.round()}');
+    print('   Population: ${_population} -> $invertedPopulation (inverted)');
+    print('   Age: ${_age} -> ${_age.round()}');
+    print('   Persona: $personaName');
+
+    return profile;
   }
 }

@@ -730,10 +730,22 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
 
       // Navigate to chat page on success
       if (mounted) {
+        // Debug logging to verify slider values being passed
+        print('🚀 Navigating to chat with slider values:');
+        print('   Housing: $_housingCondition');
+        print('   Income: $_income');
+        print('   Population: $_population');
+        print('   Age: $_age');
+        print('   Persona: ${persona.name}');
+
         context.pushReplacementWithFade(
           OrizonChatBotPage(
             selectedPersona: persona,
             userId: userId,
+            housingCondition: _housingCondition,
+            income: _income,
+            population: _population,
+            age: _age,
           ),
         );
       }
