@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
+import 'focus_settings_page.dart';
 
 class FocusPersonaSelectionPage extends StatefulWidget {
   const FocusPersonaSelectionPage({super.key});
@@ -772,12 +773,12 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
             GestureDetector(
               onTap: _isStartButtonEnabled
                   ? () {
-                      // TODO: Navigate to next step
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Starting focus group with ${_selectedPersonas.length} personas'),
-                          backgroundColor: const Color(0xFF535450),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FocusSettingsPage(
+                            selectedPersonas: _selectedPersonas,
+                          ),
                         ),
                       );
                     }
