@@ -19,6 +19,9 @@ class ApiClient {
         'AUTH_MODE': dotenv.env['AUTH_MODE'] ?? 'none', // none, bearer, iap
         'BEARER_TOKEN':
             dotenv.env['BEARER_TOKEN'] ?? '', // For Cloud Run IAM auth
+        'USE_CORS_PROXY': dotenv.env['USE_CORS_PROXY']?.toLowerCase() == 'true',
+        'CORS_PROXY_URL':
+            dotenv.env['CORS_PROXY_URL'] ?? 'https://cors-anywhere.com',
       };
     } catch (e) {
       print('Error loading runtime config: $e');
@@ -31,6 +34,23 @@ class ApiClient {
   String get backendBaseUrl {
     final config = getRuntimeConfig();
     return config?['BACKEND_BASE_URL'] ?? '/api';
+  }
+
+  /// Get the backend URL with CORS proxy if enabled (for development)
+  String get _getApiUrl {
+    final config = getRuntimeConfig();
+    final useCorsProxy =
+        config?['USE_CORS_PROXY']?.toString().toLowerCase() == 'true';
+    final corsProxyUrl =
+        config?['CORS_PROXY_URL'] ?? 'https://cors-anywhere.com';
+    final backendUrl = backendBaseUrl;
+
+    if (useCorsProxy) {
+      print('🔄 Using CORS proxy: $corsProxyUrl/$backendUrl');
+      return '$corsProxyUrl/$backendUrl';
+    }
+
+    return backendUrl;
   }
 
   /// Check if IAP mode is enabled
@@ -48,7 +68,7 @@ class ApiClient {
     int maxHistoryMessages = 10,
   }) async {
     try {
-      final url = '$backendBaseUrl/chat';
+      final url = '${_getApiUrl}/chat';
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
@@ -180,7 +200,7 @@ class ApiClient {
 
     try {
       final response = await http.get(
-        Uri.parse('$backendBaseUrl/profile'),
+        Uri.parse('${_getApiUrl}/profile'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -191,6 +211,81 @@ class ApiClient {
     } catch (e) {
       print('Error fetching user profile: $e');
       return null;
+    }
+  }
+
+  /// Load a persona for the user
+  Future<Map<String, dynamic>> loadPersona(
+      String userId, String personaName) async {
+    try {
+      final url = '${_getApiUrl}/personas/load';
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+
+      // Add authentication based on configuration
+      final config = getRuntimeConfig();
+      final authMode = config?['AUTH_MODE'] ?? 'none';
+      final bearerToken = config?['BEARER_TOKEN'];
+      final authToken = config?['AUTH_TOKEN']; // Legacy support
+      final iapMode = config?['IAP_MODE'] == true;
+      if (authMode == 'bearer' &&
+          bearerToken != null &&
+          bearerToken.isNotEmpty) {
+        // Use bearer token authentication (preferred for Cloud Run IAM)
+        headers['Authorization'] = 'Bearer $bearerToken';
+        //print('Using BEARER_TOKEN for authentication : $bearerToken');
+      } else if (authToken != null && authToken.isNotEmpty) {
+        // Legacy AUTH_TOKEN support
+        headers['Authorization'] = 'Bearer $authToken';
+        print('Using AUTH_TOKEN for authentication');
+      } else if (iapMode) {
+        // For IAP mode, we rely on cookies and don't add Authorization header
+        // The browser will automatically include IAP session cookies
+        print('Using IAP mode for authentication');
+      }
+
+      // Build request payload
+      final requestPayload = <String, dynamic>{
+        'user_id': userId,
+        'persona_name': personaName,
+      };
+
+      final requestBody = jsonEncode(requestPayload);
+
+      // Debug logging
+      print('URL: $url');
+      print('Headers: $headers');
+      print('Request Body: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: requestBody,
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print('✅ Persona loaded successfully');
+        return responseData;
+      } else if (response.statusCode == 401) {
+        throw Exception(
+            'Authentication failed. Please check your token or sign in.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Access forbidden. Check your permissions.');
+      } else {
+        throw Exception(
+            'Server error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      if (e.toString().contains('XMLHttpRequest')) {
+        // Network/CORS error
+        throw Exception(
+            'Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
+      }
+      print('❌ Error loading persona: $e');
+      rethrow;
     }
   }
 }

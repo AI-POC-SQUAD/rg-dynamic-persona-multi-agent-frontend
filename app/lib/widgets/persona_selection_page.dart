@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
 import '../utils/fade_page_route.dart';
+import '../services/api_client.dart';
+import '../services/user_service.dart';
 import 'orizon_chatbot_page.dart';
 
 class PersonaSelectionPage extends StatefulWidget {
@@ -12,9 +14,11 @@ class PersonaSelectionPage extends StatefulWidget {
 
 class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
   final PageController _pageController = PageController();
+  final ApiClient _apiClient = ApiClient();
   int _currentIndex = 0;
   List<PersonaData> personas = PersonaData.getPersonas();
   bool _showDescriptionView = false;
+  bool _isLoading = false;
 
   // Slider values for description view (starting at mid-point for each range)
   double _housingCondition = 4.0; // Range 1-8, mid-point = 4
@@ -507,29 +511,37 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
 
                             // Go button
                             GestureDetector(
-                              onTap: () {
-                                context.pushReplacementWithFade(
-                                  OrizonChatBotPage(
-                                    selectedPersona: persona,
-                                  ),
-                                );
-                              },
+                              onTap: _isLoading
+                                  ? null
+                                  : () async {
+                                      await _loadPersonaAndNavigate(persona);
+                                    },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.black,
+                                  color:
+                                      _isLoading ? Colors.grey : Colors.black,
                                   borderRadius: BorderRadius.circular(32),
                                 ),
-                                child: const Text(
-                                  'Go',
-                                  style: TextStyle(
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.w200,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.white,
-                                  ),
-                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Go',
+                                        style: TextStyle(
+                                          fontSize: 21,
+                                          fontWeight: FontWeight.w200,
+                                          fontFamily: 'NouvelR',
+                                          color: Colors.white,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],
@@ -701,5 +713,47 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
         ),
       ],
     );
+  }
+
+  /// Load persona via API and navigate to chat page
+  Future<void> _loadPersonaAndNavigate(PersonaData persona) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Get or generate user ID
+      final userId = await UserService.getUserId();
+
+      // Load persona via API
+      await _apiClient.loadPersona(userId, persona.backendPersonaName);
+
+      // Navigate to chat page on success
+      if (mounted) {
+        context.pushReplacementWithFade(
+          OrizonChatBotPage(
+            selectedPersona: persona,
+            userId: userId,
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading persona: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

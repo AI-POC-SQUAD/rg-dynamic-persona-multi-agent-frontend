@@ -13,6 +13,24 @@ class PersonaData {
     required this.sphereAsset,
   });
 
+  /// Get the backend persona name for API calls
+  String get backendPersonaName {
+    switch (id) {
+      case 0:
+        return 'ev_skeptic_traditionalists_base';
+      case 1:
+        return 'environment_evangelists_base';
+      case 2:
+        return 'price_conscious_errand_drivers_base';
+      case 3:
+        return 'status_driven_commuters_base';
+      case 4:
+        return 'convenience_buyers_base';
+      default:
+        return 'convenience_buyers_base'; // fallback
+    }
+  }
+
   static List<PersonaData> getPersonas() {
     return [
       PersonaData(

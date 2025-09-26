@@ -7,8 +7,9 @@ import '../models/conversation.dart';
 
 class OrizonChatBotPage extends StatefulWidget {
   final PersonaData? selectedPersona;
+  final String? userId;
 
-  const OrizonChatBotPage({super.key, this.selectedPersona});
+  const OrizonChatBotPage({super.key, this.selectedPersona, this.userId});
 
   @override
   State<OrizonChatBotPage> createState() => _OrizonChatBotPageState();
@@ -453,7 +454,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       await _conversationManager.createConversation(title: 'Orizon Chat');
     }
 
-    final userId = _conversationManager.getCurrentUserId();
+    // Use userId from constructor if available, otherwise from conversation manager
+    final userId = widget.userId ?? _conversationManager.getCurrentUserId();
     if (userId == null) {
       await _addErrorMessage(
           'No active conversation. Please create a new conversation.');

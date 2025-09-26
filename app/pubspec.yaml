@@ -28,6 +28,7 @@ flutter:
 
   # Add assets here for the new Orizon UI
   assets:
+    - .env
     - assets/videos/sphere_animation.mp4
     - assets/images/persona_0.png
     - assets/images/persona_1.png
