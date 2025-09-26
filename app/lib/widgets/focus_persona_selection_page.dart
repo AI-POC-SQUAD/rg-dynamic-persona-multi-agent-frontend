@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
+import '../models/persona_instance.dart';
 import '../utils/fade_page_route.dart';
 import 'focus_settings_page.dart';
 
@@ -17,8 +18,8 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
   List<PersonaData> personas = PersonaData.getPersonas();
   bool _showDescriptionView = false;
 
-  // Selected personas for focus group (max 5)
-  List<PersonaData> _selectedPersonas = [];
+  // Selected persona instances for focus group (max 5)
+  List<PersonaInstance> _selectedPersonas = [];
 
   // Slider values for description view (starting at mid-point for each range)
   double _housingCondition = 4.0; // Range 1-8, mid-point = 4
@@ -28,11 +29,23 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
 
   void _selectPersona(PersonaData persona) {
     setState(() {
-      if (_selectedPersonas.contains(persona)) {
-        _selectedPersonas.remove(persona);
-      } else if (_selectedPersonas.length < 5) {
-        _selectedPersonas.add(persona);
+      // Always add a new instance with current settings (no more max limit check for same persona)
+      if (_selectedPersonas.length < 5) {
+        final instance = PersonaInstance.fromSettings(
+          persona: persona,
+          housingCondition: _housingCondition,
+          income: _income,
+          population: _population,
+          age: _age,
+        );
+        _selectedPersonas.add(instance);
       }
+    });
+  }
+
+  void _removePersonaInstance(PersonaInstance instance) {
+    setState(() {
+      _selectedPersonas.remove(instance);
     });
   }
 
@@ -504,22 +517,24 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
 
                             const SizedBox(width: 16),
 
-                            // Select persona button
+                            // Select persona button (always clickable)
                             GestureDetector(
-                              onTap: () => _selectPersona(persona),
+                              onTap: _selectedPersonas.length < 5
+                                  ? () => _selectPersona(persona)
+                                  : null,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: _selectedPersonas.contains(persona)
-                                      ? const Color(0xFF535450)
-                                      : Colors.black,
+                                  color: _selectedPersonas.length < 5
+                                      ? Colors.black
+                                      : const Color(0xFFC4C4C4),
                                   borderRadius: BorderRadius.circular(32),
                                 ),
                                 child: Text(
-                                  _selectedPersonas.contains(persona)
-                                      ? 'Selected'
-                                      : 'Select this Persona',
+                                  _selectedPersonas.length < 5
+                                      ? 'Select this Persona'
+                                      : 'Max 5 Selected',
                                   style: const TextStyle(
                                     fontSize: 21,
                                     fontWeight: FontWeight.w200,
@@ -743,7 +758,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                         Positioned.fill(
                           child: ClipOval(
                             child: Image.asset(
-                              _selectedPersonas[index].sphereAsset,
+                              _selectedPersonas[index].persona.sphereAsset,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -762,6 +777,29 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                           ),
                         ),
                       ),
+                      // Cross button to remove persona (if selected)
+                      if (hasPersona)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: GestureDetector(
+                            onTap: () => _removePersonaInstance(
+                                _selectedPersonas[index]),
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 );
@@ -776,7 +814,10 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                   ? () {
                       context.pushWithFade(
                         FocusSettingsPage(
-                          selectedPersonas: _selectedPersonas,
+                          selectedPersonas: _selectedPersonas
+                              .map((instance) => instance.persona)
+                              .toList(),
+                          selectedInstances: _selectedPersonas,
                         ),
                       );
                     }

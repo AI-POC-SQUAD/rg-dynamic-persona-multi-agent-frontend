@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
+import '../models/persona_instance.dart';
 
 class FocusSettingsPage extends StatefulWidget {
   final List<PersonaData> selectedPersonas;
+  final List<PersonaInstance> selectedInstances;
 
-  const FocusSettingsPage({super.key, required this.selectedPersonas});
+  const FocusSettingsPage({
+    super.key,
+    required this.selectedPersonas,
+    required this.selectedInstances,
+  });
 
   @override
   State<FocusSettingsPage> createState() => _FocusSettingsPageState();
@@ -366,57 +372,63 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                 Row(
                                   children: [
                                     for (int i = 0;
-                                        i < widget.selectedPersonas.length;
+                                        i < widget.selectedInstances.length;
                                         i++) ...[
-                                      Container(
-                                        width: 42,
-                                        height: 42,
-                                        margin: const EdgeInsets.only(right: 8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: const Color(0xFF535450),
-                                              width: 1),
-                                        ),
-                                        child: Stack(
-                                          children: [
-                                            // Persona sphere
-                                            Positioned.fill(
-                                              child: ClipOval(
-                                                child: Image.asset(
-                                                  widget.selectedPersonas[i]
-                                                      .sphereAsset,
-                                                  fit: BoxFit.cover,
+                                      Tooltip(
+                                        message:
+                                            '${widget.selectedInstances[i].persona.name}\n${widget.selectedInstances[i].settingsSummary}',
+                                        child: Container(
+                                          width: 42,
+                                          height: 42,
+                                          margin:
+                                              const EdgeInsets.only(right: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: const Color(0xFF535450),
+                                                width: 1),
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              // Persona sphere
+                                              Positioned.fill(
+                                                child: ClipOval(
+                                                  child: Image.asset(
+                                                    widget.selectedInstances[i]
+                                                        .persona.sphereAsset,
+                                                    fit: BoxFit.cover,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            // Number overlay
-                                            Positioned(
-                                              top: -2,
-                                              right: -2,
-                                              child: Container(
-                                                width: 16,
-                                                height: 16,
-                                                decoration: const BoxDecoration(
-                                                  color: Color(0xFF535450),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    '${i + 1}',
-                                                    style: const TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      fontFamily: 'NouvelR',
-                                                      color: Colors.white,
+                                              // Number overlay
+                                              Positioned(
+                                                top: -2,
+                                                right: -2,
+                                                child: Container(
+                                                  width: 16,
+                                                  height: 16,
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    color: Color(0xFF535450),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      '${i + 1}',
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        fontFamily: 'NouvelR',
+                                                        color: Colors.white,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -431,7 +443,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                        'Starting focus group with ${widget.selectedPersonas.length} personas for ${_roundsController.text.isNotEmpty ? _roundsController.text : 'default'} rounds'),
+                                        'Starting focus group with ${widget.selectedInstances.length} personas for ${_roundsController.text.isNotEmpty ? _roundsController.text : 'default'} rounds'),
                                     backgroundColor: const Color(0xFF535450),
                                   ),
                                 );
@@ -509,7 +521,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            '${widget.selectedPersonas.length} personas selected',
+            '${widget.selectedInstances.length} personas selected',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w300,
