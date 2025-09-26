@@ -304,120 +304,127 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
 
                         const SizedBox(height: 16),
 
-                        // Rounds input field
-                        Container(
-                          width: 288,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(25),
-                            border: Border.all(
-                                color: const Color(0xFFC4C4C4), width: 1),
-                          ),
-                          child: TextField(
-                            controller: _roundsController,
-                            decoration: const InputDecoration(
-                              hintText: 'Indicate how many rounds',
-                              hintStyle: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w300,
+                        // Rounds input field (centered)
+                        Center(
+                          child: Container(
+                            width: 400,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                  color: const Color(0xFFC4C4C4), width: 1),
+                            ),
+                            child: TextField(
+                              controller: _roundsController,
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                hintText: 'Indicate how many rounds',
+                                hintStyle: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w300,
+                                  fontFamily: 'NouvelR',
+                                  color: Color(0xFFC4C4C4),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 15),
+                              ),
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
                                 fontFamily: 'NouvelR',
-                                color: Color(0xFFC4C4C4),
+                                color: Colors.black,
                               ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 30, vertical: 12),
-                            ),
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
                             ),
                           ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Selected personas section
-                        const Text(
-                          'Selected personas:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Show selected personas with sphere icons
-                        Row(
-                          children: [
-                            for (int i = 0;
-                                i < widget.selectedPersonas.length;
-                                i++) ...[
-                              Container(
-                                width: 28,
-                                height: 28,
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: const Color(0xFF535450), width: 1),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    // Persona sphere
-                                    Positioned.fill(
-                                      child: ClipOval(
-                                        child: Image.asset(
-                                          widget
-                                              .selectedPersonas[i].sphereAsset,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                    // Number overlay
-                                    Positioned(
-                                      top: -2,
-                                      right: -2,
-                                      child: Container(
-                                        width: 16,
-                                        height: 16,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF535450),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '${i + 1}',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              fontFamily: 'NouvelR',
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
                         ),
 
                         const Spacer(),
 
-                        // Go button
+                        // Selected personas and Go button row
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            // Selected personas section on the left
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Selected personas:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    fontFamily: 'NouvelR',
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Show selected personas with sphere icons
+                                Row(
+                                  children: [
+                                    for (int i = 0;
+                                        i < widget.selectedPersonas.length;
+                                        i++) ...[
+                                      Container(
+                                        width: 42,
+                                        height: 42,
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: const Color(0xFF535450),
+                                              width: 1),
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            // Persona sphere
+                                            Positioned.fill(
+                                              child: ClipOval(
+                                                child: Image.asset(
+                                                  widget.selectedPersonas[i]
+                                                      .sphereAsset,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                            // Number overlay
+                                            Positioned(
+                                              top: -2,
+                                              right: -2,
+                                              child: Container(
+                                                width: 16,
+                                                height: 16,
+                                                decoration: const BoxDecoration(
+                                                  color: Color(0xFF535450),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    '${i + 1}',
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      fontFamily: 'NouvelR',
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                            // Go button on the right
                             GestureDetector(
                               onTap: () {
                                 // TODO: Navigate to focus group conversation
