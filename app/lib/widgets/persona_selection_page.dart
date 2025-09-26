@@ -195,7 +195,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
 
                       // Fixed carousel indicators positioned under the persona cards
                       Positioned(
-                        bottom: 60, // Position above the bottom text
+                        bottom: 120, // Position above the bottom text
                         left: 0,
                         right: 0,
                         child: Row(

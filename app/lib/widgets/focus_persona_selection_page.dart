@@ -212,7 +212,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
 
                       // Fixed carousel indicators positioned under the persona cards
                       Positioned(
-                        bottom: 60, // Position above the bottom text
+                        bottom: 120, // Position above the bottom text
                         left: 0,
                         right: 0,
                         child: Row(
@@ -705,7 +705,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
         const Text(
           'Your selection',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 18,
             fontWeight: FontWeight.w300,
             fontFamily: 'NouvelR',
             color: Colors.black,
@@ -724,8 +724,8 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
               children: List.generate(5, (index) {
                 final bool hasPersona = index < _selectedPersonas.length;
                 return Container(
-                  width: 28,
-                  height: 28,
+                  width: 42,
+                  height: 42,
                   margin: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
                     color: hasPersona ? Colors.white : const Color(0xFFC4C4C4),
@@ -751,7 +751,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                         child: Text(
                           '${index + 1}',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 18,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'NouvelR',
                             color: hasPersona
@@ -794,7 +794,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                 child: Text(
                   'Start',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 20,
                     fontWeight: FontWeight.w300,
                     fontFamily: 'NouvelR',
                     color: _isStartButtonEnabled ? Colors.white : Colors.white,
