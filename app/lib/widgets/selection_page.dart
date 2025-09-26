@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/fade_page_route.dart';
 import 'persona_selection_page.dart';
 import 'focus_persona_selection_page.dart';
 
@@ -128,12 +129,8 @@ class _SelectionPageState extends State<SelectionPage> {
                                   description:
                                       'Interact live with a customer segment to explore their motivations, gather candid answers, and collect valuable insights and data about the topic.',
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const PersonaSelectionPage(),
-                                      ),
+                                    context.pushWithFade(
+                                      const PersonaSelectionPage(),
                                     );
                                   },
                                 ),
@@ -146,12 +143,8 @@ class _SelectionPageState extends State<SelectionPage> {
                                   description:
                                       'Launch a debate between multiple customer segments and get a synthesis of their combined perspectives.',
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const FocusPersonaSelectionPage(),
-                                      ),
+                                    context.pushWithFade(
+                                      const FocusPersonaSelectionPage(),
                                     );
                                   },
                                 ),

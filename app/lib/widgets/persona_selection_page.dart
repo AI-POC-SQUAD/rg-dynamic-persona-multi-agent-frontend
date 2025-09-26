@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
+import '../utils/fade_page_route.dart';
 import 'orizon_chatbot_page.dart';
 
 class PersonaSelectionPage extends StatefulWidget {
@@ -507,12 +508,9 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                             // Go button
                             GestureDetector(
                               onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => OrizonChatBotPage(
-                                      selectedPersona: persona,
-                                    ),
+                                context.pushReplacementWithFade(
+                                  OrizonChatBotPage(
+                                    selectedPersona: persona,
                                   ),
                                 );
                               },

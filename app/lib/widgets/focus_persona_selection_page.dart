@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
+import '../utils/fade_page_route.dart';
 import 'focus_settings_page.dart';
 
 class FocusPersonaSelectionPage extends StatefulWidget {
@@ -773,12 +774,9 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
             GestureDetector(
               onTap: _isStartButtonEnabled
                   ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FocusSettingsPage(
-                            selectedPersonas: _selectedPersonas,
-                          ),
+                      context.pushWithFade(
+                        FocusSettingsPage(
+                          selectedPersonas: _selectedPersonas,
                         ),
                       );
                     }

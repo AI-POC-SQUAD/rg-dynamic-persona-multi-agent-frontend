@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:async';
+import '../utils/fade_page_route.dart';
 import 'selection_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,7 +18,6 @@ class _HomePageState extends State<HomePage>
   bool _useVideoPlayer = true;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  Timer? _longPressTimer;
 
   @override
   void initState() {
@@ -92,7 +91,6 @@ class _HomePageState extends State<HomePage>
   void dispose() {
     _videoController.dispose();
     _animationController.dispose();
-    _longPressTimer?.cancel();
     super.dispose();
   }
 
@@ -101,24 +99,11 @@ class _HomePageState extends State<HomePage>
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
       body: GestureDetector(
-        onTapDown: (details) {
-          // Start the 3-second timer when user presses down
-          _longPressTimer = Timer(const Duration(seconds: 2), () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SelectionPage(),
-              ),
-            );
-          });
-        },
-        onTapUp: (details) {
-          // Cancel the timer if user releases before 3 seconds
-          _longPressTimer?.cancel();
-        },
-        onTapCancel: () {
-          // Cancel the timer if tap is cancelled (e.g., user drags away)
-          _longPressTimer?.cancel();
+        onTap: () {
+          // Navigate to selection page on any tap
+          context.pushWithFade(
+            const SelectionPage(),
+          );
         },
         child: Stack(
           children: [
