@@ -13,16 +13,16 @@ class FocusSettingsPage extends StatefulWidget {
 class _FocusSettingsPageState extends State<FocusSettingsPage> {
   final TextEditingController _roundsController = TextEditingController();
 
-  // Show only the first persona (EV Skeptic)
+  // Show the first selected persona
   late PersonaData _displayPersona;
 
   @override
   void initState() {
     super.initState();
-    // Use the first persona from the selection or default to first available persona
-    List<PersonaData> personas = PersonaData.getPersonas();
-    _displayPersona =
-        personas.isNotEmpty ? personas[0] : PersonaData.getPersonas()[0];
+    // Use the first persona from the selected personas or default to first available persona
+    _displayPersona = widget.selectedPersonas.isNotEmpty
+        ? widget.selectedPersonas[0]
+        : PersonaData.getPersonas()[0];
   }
 
   @override
