@@ -18,6 +18,7 @@ class FocusSettingsPage extends StatefulWidget {
 
 class _FocusSettingsPageState extends State<FocusSettingsPage> {
   final TextEditingController _roundsController = TextEditingController();
+  final TextEditingController _topicController = TextEditingController();
 
   // Show the first selected persona
   late PersonaData _displayPersona;
@@ -34,6 +35,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
   @override
   void dispose() {
     _roundsController.dispose();
+    _topicController.dispose();
     super.dispose();
   }
 
@@ -270,41 +272,18 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
 
                         const SizedBox(height: 16),
 
-                        // Persona name
-                        Text(
-                          persona.name,
-                          style: const TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Lead the discussion text
-                        const Text(
-                          'Lead the discussion',
-                          style: TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w300,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                            height: 1.2,
-                          ),
-                        ),
-
                         const SizedBox(height: 24),
 
                         // "Define the depth of the conversation" text
-                        const Text(
-                          'Define the depth of the conversation.',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
+                        Center(
+                          child: const Text(
+                            'Define the depth of the conversation.',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
                           ),
                         ),
 
@@ -337,6 +316,59 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                     horizontal: 30, vertical: 15),
                               ),
                               keyboardType: TextInputType.number,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'NouvelR',
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 48),
+
+                        Center(
+                          child: const Text(
+                            'Define the conversation topic.',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Topic input field (centered)
+                        Center(
+                          child: Container(
+                            width: 400,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                  color: const Color(0xFFC4C4C4), width: 1),
+                            ),
+                            child: TextField(
+                              controller: _topicController,
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                hintText: 'Enter discussion topic',
+                                hintStyle: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w300,
+                                  fontFamily: 'NouvelR',
+                                  color: Color(0xFFC4C4C4),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 15),
+                              ),
+                              keyboardType: TextInputType.text,
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w400,
@@ -443,7 +475,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                        'Starting focus group with ${widget.selectedInstances.length} personas for ${_roundsController.text.isNotEmpty ? _roundsController.text : 'default'} rounds'),
+                                        'Starting focus group with ${widget.selectedInstances.length} personas for ${_roundsController.text.isNotEmpty ? _roundsController.text : 'default'} rounds${_topicController.text.isNotEmpty ? ' on topic: ${_topicController.text}' : ''}'),
                                     backgroundColor: const Color(0xFF535450),
                                   ),
                                 );
