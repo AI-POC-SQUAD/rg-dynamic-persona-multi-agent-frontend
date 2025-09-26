@@ -741,61 +741,85 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
               children: List.generate(5, (index) {
                 final bool hasPersona = index < _selectedPersonas.length;
                 return Container(
-                  width: 42,
-                  height: 42,
+                  width: 50, // Increased to accommodate overflow
+                  height: 50, // Increased to accommodate overflow
                   margin: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: hasPersona ? Colors.white : const Color(0xFFC4C4C4),
-                    shape: BoxShape.circle,
-                    border: hasPersona
-                        ? Border.all(color: const Color(0xFF535450), width: 1)
-                        : null,
-                  ),
                   child: Stack(
+                    clipBehavior: Clip.none, // Allow overflow
                     children: [
-                      // Persona sphere background (if selected)
-                      if (hasPersona)
-                        Positioned.fill(
-                          child: ClipOval(
-                            child: Image.asset(
-                              _selectedPersonas[index].persona.sphereAsset,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      // Number overlay
-                      Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'NouvelR',
+                      // Main circle
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
                             color: hasPersona
                                 ? Colors.white
                                 : const Color(0xFFC4C4C4),
+                            shape: BoxShape.circle,
+                            border: hasPersona
+                                ? Border.all(
+                                    color: const Color(0xFF535450), width: 1)
+                                : null,
+                          ),
+                          child: Stack(
+                            children: [
+                              // Persona sphere background (if selected)
+                              if (hasPersona)
+                                Positioned.fill(
+                                  child: ClipOval(
+                                    child: Image.asset(
+                                      _selectedPersonas[index]
+                                          .persona
+                                          .sphereAsset,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              // Number text for empty slots (centered)
+                              if (!hasPersona)
+                                Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'NouvelR',
+                                      color: Color(0xFFC4C4C4),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
-                      // Cross button to remove persona (if selected)
+                      // Cross button with number on top-right (if selected)
                       if (hasPersona)
                         Positioned(
-                          top: -4,
-                          right: -4,
+                          top: 0,
+                          right: 0,
                           child: GestureDetector(
                             onTap: () => _removePersonaInstance(
                                 _selectedPersonas[index]),
                             child: Container(
                               width: 20,
                               height: 20,
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 14,
-                                color: Colors.white,
+                              child: Center(
+                                child: Text(
+                                  'X',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'NouvelR',
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),

@@ -82,10 +82,78 @@ class PersonaInstance {
 
   /// Returns a human-readable summary of the settings
   String get settingsSummary {
-    return 'Housing: ${housingCondition.toInt()}/8, '
-        'Income: ${income.toInt()}/13, '
-        'Population: ${population.toInt()}/5, '
-        'Age: ${age.toInt()}/10';
+    return 'Housing: ${_getHousingLabel()}\n'
+        'Income: ${_getIncomeLabel()}\n'
+        'Population: ${_getPopulationLabel()}\n'
+        'Age: ${_getAgeLabel()}';
+  }
+
+  /// Convert housing condition value to string label
+  String _getHousingLabel() {
+    const labels = [
+      'Apartment renter (no dedicated parking)',
+      'Apartment renter (dedicated parking)',
+      'Apartment owner (no dedicated parking)',
+      'Apartment owner (dedicated parking)',
+      'House renter (no dedicated parking)',
+      'House renter (dedicated parking)',
+      'House owner (no dedicated parking)',
+      'House owner (dedicated parking)'
+    ];
+    int index = (housingCondition - 1).round().clamp(0, labels.length - 1);
+    return labels[index];
+  }
+
+  /// Convert income value to string label
+  String _getIncomeLabel() {
+    const labels = [
+      '< 1000€',
+      '1000€ - 2000€',
+      '2001€ - 3000€',
+      '3001€ - 4000€',
+      '4001€ - 5000€',
+      '5001€ - 6000€',
+      '6001€ - 7000€',
+      '7001€ - 8000€',
+      '8001€ - 9000€',
+      '9001€ - 10000€',
+      '10001€ - 11000€',
+      '11001€ - 12000€',
+      '> 12000€'
+    ];
+    int index = (income - 1).round().clamp(0, labels.length - 1);
+    return labels[index];
+  }
+
+  /// Convert population value to string label
+  String _getPopulationLabel() {
+    const labels = [
+      '< 5,000 people',
+      '5,000 - 49,999 people',
+      '50,000 - 249,999 people',
+      '250,000 - 1 million people',
+      '> 1 million people'
+    ];
+    int index = (population - 1).round().clamp(0, labels.length - 1);
+    return labels[index];
+  }
+
+  /// Convert age value to string label
+  String _getAgeLabel() {
+    const labels = [
+      '18-24 years',
+      '25-29 years',
+      '30-34 years',
+      '35-39 years',
+      '40-44 years',
+      '45-49 years',
+      '50-54 years',
+      '55-59 years',
+      '60-64 years',
+      '65-75 years'
+    ];
+    int index = (age - 1).round().clamp(0, labels.length - 1);
+    return labels[index];
   }
 
   /// Returns a short description for display

@@ -405,45 +405,68 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                   children: [
                                     for (int i = 0;
                                         i < widget.selectedInstances.length;
-                                        i++) ...[
+                                        i++)
                                       Tooltip(
                                         message:
                                             '${widget.selectedInstances[i].persona.name}\n${widget.selectedInstances[i].settingsSummary}',
                                         child: Container(
-                                          width: 42,
-                                          height: 42,
+                                          width:
+                                              48, // Increased to accommodate overflow
+                                          height:
+                                              48, // Increased to accommodate overflow
                                           margin:
                                               const EdgeInsets.only(right: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: const Color(0xFF535450),
-                                                width: 1),
-                                          ),
                                           child: Stack(
+                                            clipBehavior:
+                                                Clip.none, // Allow overflow
                                             children: [
-                                              // Persona sphere
-                                              Positioned.fill(
-                                                child: ClipOval(
-                                                  child: Image.asset(
-                                                    widget.selectedInstances[i]
-                                                        .persona.sphereAsset,
-                                                    fit: BoxFit.cover,
+                                              // Main circle
+                                              Positioned(
+                                                top: 3,
+                                                left: 3,
+                                                child: Container(
+                                                  width: 42,
+                                                  height: 42,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                        color: const Color(
+                                                            0xFF535450),
+                                                        width: 1),
+                                                  ),
+                                                  child: Stack(
+                                                    children: [
+                                                      // Persona sphere
+                                                      Positioned.fill(
+                                                        child: ClipOval(
+                                                          child: Image.asset(
+                                                            widget
+                                                                .selectedInstances[
+                                                                    i]
+                                                                .persona
+                                                                .sphereAsset,
+                                                            fit: BoxFit.cover,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               ),
-                                              // Number overlay
+                                              // Number overlay (outside main circle)
                                               Positioned(
-                                                top: -2,
-                                                right: -2,
+                                                top: 0,
+                                                right: 0,
                                                 child: Container(
                                                   width: 16,
                                                   height: 16,
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                    color: Color(0xFF535450),
-                                                    shape: BoxShape.circle,
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        const Color(0xFF535450),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
                                                   ),
                                                   child: Center(
                                                     child: Text(
@@ -463,7 +486,6 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                           ),
                                         ),
                                       ),
-                                    ],
                                   ],
                                 ),
                               ],
