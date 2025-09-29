@@ -39,7 +39,6 @@
 
 # Environment and secrets
 .env
-.env.*
 !.env.sample
 
 # Logs
