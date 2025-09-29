@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Flutter web SPA
 # Stage 1: Build Flutter web application
-FROM ghcr.io/cirruslabs/flutter:3.35.3 AS build
+FROM ghcr.io/cirruslabs/flutter:3.35.4 AS build
 
 # Set working directory
 WORKDIR /app
@@ -15,8 +15,8 @@ COPY app/ ./
 # Create a placeholder .env file if it doesn't exist (for build-time)
 RUN touch .env
 
-# Build Flutter web for production with WASM
-RUN flutter build web --wasm --release
+# Build Flutter web for production
+RUN flutter build web --release
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
@@ -42,6 +42,7 @@ ENV APP_PUBLIC_PATH="/"
 ENV BACKEND_BASE_URL="/api"
 ENV IAP_MODE="false"
 ENV IAP_AUDIENCE=""
+ENV USE_CORS_PROXY="false"
 
 # Expose port 8080 (Cloud Run default)
 EXPOSE 8080
