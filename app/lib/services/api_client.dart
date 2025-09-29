@@ -13,13 +13,14 @@ class ApiClient {
       // Load configuration from .env file instead of JavaScript
       _runtimeConfig = {
         'APP_PUBLIC_PATH': dotenv.env['APP_PUBLIC_PATH'] ?? '/',
-        'BACKEND_BASE_URL': dotenv.env['BACKEND_BASE_URL'] ?? '/api',
+        'BACKEND_BASE_URL': dotenv.env['BACKEND_BASE_URL'] ??
+            'https://rg-dynamic-persona-auth-proxy-1036279278510.europe-west9.run.app',
         'IAP_MODE': dotenv.env['IAP_MODE']?.toLowerCase() == 'true',
         'IAP_AUDIENCE': dotenv.env['IAP_AUDIENCE'] ?? '',
         'AUTH_MODE': dotenv.env['AUTH_MODE'] ?? 'none', // none, bearer, iap
         'BEARER_TOKEN':
             dotenv.env['BEARER_TOKEN'] ?? '', // For Cloud Run IAM auth
-        'USE_CORS_PROXY': dotenv.env['USE_CORS_PROXY']?.toLowerCase() == 'true',
+        'USE_CORS_PROXY': dotenv.env['USE_CORS_PROXY'] ?? 'false',
         'CORS_PROXY_URL':
             dotenv.env['CORS_PROXY_URL'] ?? 'https://cors-anywhere.com',
       };
@@ -33,7 +34,8 @@ class ApiClient {
   /// Get the backend base URL from runtime config
   String get backendBaseUrl {
     final config = getRuntimeConfig();
-    return config?['BACKEND_BASE_URL'] ?? '/api';
+    return config?['BACKEND_BASE_URL'] ??
+        'https://rg-dynamic-persona-auth-proxy-1036279278510.europe-west9.run.app';
   }
 
   /// Get the backend URL with CORS proxy if enabled (for development)
