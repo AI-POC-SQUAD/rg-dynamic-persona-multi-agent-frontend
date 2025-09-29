@@ -14,7 +14,7 @@ COPY app/ ./
 
 # Create a placeholder .env file if it doesn't exist (for build-time)
 #RUN touch .env
-COPY .env.prod .env
+COPY .env.prod /app/.env
 
 # Build Flutter web for production
 RUN flutter build web --release

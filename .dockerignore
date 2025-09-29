@@ -39,7 +39,10 @@
 
 # Environment and secrets
 .env
+.env.*
 !.env.sample
+!.env.prod
+
 
 # Logs
 **/*.log
