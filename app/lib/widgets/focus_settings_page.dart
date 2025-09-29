@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
 import '../models/persona_instance.dart';
+import 'focus_answers_page.dart';
 
 class FocusSettingsPage extends StatefulWidget {
   final List<PersonaData> selectedPersonas;
@@ -493,12 +494,23 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                             // Go button on the right
                             GestureDetector(
                               onTap: () {
-                                // TODO: Navigate to focus group conversation
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Starting focus group with ${widget.selectedInstances.length} personas for ${_roundsController.text.isNotEmpty ? _roundsController.text : 'default'} rounds${_topicController.text.isNotEmpty ? ' on topic: ${_topicController.text}' : ''}'),
-                                    backgroundColor: const Color(0xFF535450),
+                                // Navigate to focus answers page
+                                final rounds =
+                                    int.tryParse(_roundsController.text) ?? 3;
+                                final topic = _topicController.text.isNotEmpty
+                                    ? _topicController.text
+                                    : 'Battery subscription analysis';
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => FocusAnswersPage(
+                                      selectedPersonas: widget.selectedPersonas,
+                                      selectedInstances:
+                                          widget.selectedInstances,
+                                      topic: topic,
+                                      rounds: rounds,
+                                    ),
                                   ),
                                 );
                               },
