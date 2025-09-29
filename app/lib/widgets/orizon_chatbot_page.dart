@@ -166,7 +166,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     return Column(
       children: [
         // Chat messages area
-        Expanded(
+        Flexible(
+          flex: 1,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ListView.builder(
@@ -730,10 +731,15 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                 ),
 
                 // Chat content area
-                Expanded(
-                  child: hasMessages
-                      ? _buildChatWithMessages()
-                      : _buildEmptyChat(),
+                Flexible(
+                  flex: 1,
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: hasMessages
+                        ? _buildChatWithMessages()
+                        : _buildEmptyChat(),
+                  ),
                 ),
               ],
             ),
