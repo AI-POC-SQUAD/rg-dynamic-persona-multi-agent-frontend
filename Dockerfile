@@ -40,7 +40,7 @@ RUN mkdir -p /usr/share/nginx/html/config
 # Environment variables with sensible defaults
 ENV APP_PUBLIC_PATH="/"
 ENV BACKEND_BASE_URL="/api"
-ENV IAP_MODE="false"
+ENV IAP_MODE="true"
 ENV IAP_AUDIENCE=""
 ENV USE_CORS_PROXY="false"
 
