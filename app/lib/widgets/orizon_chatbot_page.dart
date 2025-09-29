@@ -165,9 +165,8 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   Widget _buildChatWithMessages() {
     return Column(
       children: [
-        // Chat messages area
-        Flexible(
-          flex: 1,
+        // Chat messages area - Using Expanded instead of Flexible for better space allocation
+        Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ListView.builder(
@@ -305,24 +304,27 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                         border: Border.all(
                             color: const Color(0xFFC4C4C4), width: 0.5),
                       ),
-                      child: Center(
-                        child: Positioned(
-                          left: 1,
-                          top: 1,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(13),
-                            child: Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: AssetImage(_selectedSegment!.iconPath),
-                                  fit: BoxFit.cover,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            left: 1,
+                            top: 1,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(13),
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image:
+                                        AssetImage(_selectedSegment!.iconPath),
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
 
@@ -400,108 +402,170 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                 color: Color(0xFF4ECDC4),
                 shape: BoxShape.circle,
               ),
-              child: //ImageIcon(
-                  //AssetImage(_selectedSegment!.iconPath),
-                  //size: 10,
-                  //)
-                  Positioned(
-                left: 1,
-                top: 1,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(13),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(_selectedSegment!.iconPath),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-          // Message bubble
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.65,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isUser ? Colors.transparent : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border:
-                    !isUser ? Border.all(color: Colors.grey.shade300) : null,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  if (!isUser && _selectedSegment != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        '${_selectedSegment!.name}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
-                          fontFamily: 'NouvelR',
-                          fontWeight: FontWeight.w300,
+                  Positioned(
+                    left: 1,
+                    top: 1,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(13),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(_selectedSegment!.iconPath),
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                      ),
-                    ),
-                  MarkdownBody(
-                    data: message.text,
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontFamily: 'NouvelR',
-                        fontWeight: FontWeight.w300,
-                      ),
-                      strong: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                      em: const TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                      h1: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                      h2: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                      listBullet: const TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                      code: const TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Courier',
-                        backgroundColor: Color(0xFFF5F5F5),
-                        color: Color(0xFF535450),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
+          // Message bubble - Different approach for user vs AI messages
+          isUser
+              ? Expanded(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.65,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        MarkdownBody(
+                          data: message.text,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontFamily: 'NouvelR',
+                              fontWeight: FontWeight.w300,
+                            ),
+                            strong: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                            em: const TextStyle(
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                            h1: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                            h2: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                            listBullet: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                            code: const TextStyle(
+                              fontSize: 14,
+                              fontFamily: 'Courier',
+                              backgroundColor: Color(0xFFF5F5F5),
+                              color: Color(0xFF535450),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width *
+                        0.35, // AI messages narrower
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_selectedSegment != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '${_selectedSegment!.name}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                              fontFamily: 'NouvelR',
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                        ),
+                      MarkdownBody(
+                        data: message.text,
+                        styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontFamily: 'NouvelR',
+                            fontWeight: FontWeight.w300,
+                          ),
+                          strong: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                          em: const TextStyle(
+                            fontStyle: FontStyle.italic,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                          h1: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                          h2: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                          listBullet: const TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                          code: const TextStyle(
+                            fontSize: 14,
+                            fontFamily: 'Courier',
+                            backgroundColor: Color(0xFFF5F5F5),
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
           if (isUser) ...[
-            // User Avatar
+            // User Avatar - restored to previous position
             Container(
               width: 32,
               height: 32,
@@ -730,12 +794,10 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                   ),
                 ),
 
-                // Chat content area
-                Flexible(
-                  flex: 1,
+                // Chat content area - Using Expanded for main content with proper constraints
+                Expanded(
                   child: Container(
                     width: double.infinity,
-                    height: double.infinity,
                     child: hasMessages
                         ? _buildChatWithMessages()
                         : _buildEmptyChat(),
