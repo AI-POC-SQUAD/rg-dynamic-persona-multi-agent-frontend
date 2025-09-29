@@ -51,7 +51,6 @@ coverage/
 
 # Environment variables
 .env
-.env.*
 !.env.sample
 
 # IDE files
