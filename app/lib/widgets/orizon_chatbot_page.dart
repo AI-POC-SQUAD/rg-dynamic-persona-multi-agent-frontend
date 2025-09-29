@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/customer_segment.dart';
 import '../models/persona_data.dart';
 import '../services/api_client.dart';
@@ -431,13 +432,48 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
                         ),
                       ),
                     ),
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontFamily: 'NouvelR',
-                      fontWeight: FontWeight.w300,
+                  MarkdownBody(
+                    data: message.text,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontFamily: 'NouvelR',
+                        fontWeight: FontWeight.w300,
+                      ),
+                      strong: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
+                      em: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
+                      h1: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
+                      h2: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
+                      listBullet: const TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black,
+                      ),
+                      code: const TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'Courier',
+                        backgroundColor: Color(0xFFF5F5F5),
+                        color: Color(0xFF535450),
+                      ),
                     ),
                   ),
                 ],

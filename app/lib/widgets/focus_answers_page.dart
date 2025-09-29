@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../models/persona_data.dart';
 import '../models/persona_instance.dart';
 import '../services/api_client.dart';
@@ -338,68 +339,90 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                           for (int i = 0;
                               i < widget.selectedInstances.length;
                               i++)
-                            Container(
-                              width: 48,
-                              height: 48,
-                              margin: const EdgeInsets.only(right: 8),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  // Main circle
-                                  Positioned(
-                                    top: 3,
-                                    left: 3,
-                                    child: Container(
-                                      width: 42,
-                                      height: 42,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: const Color(0xFF535450),
-                                            width: 1),
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          // Persona sphere
-                                          Positioned.fill(
-                                            child: ClipOval(
-                                              child: Image.asset(
-                                                widget.selectedInstances[i]
-                                                    .persona.sphereAsset,
-                                                fit: BoxFit.cover,
+                            Tooltip(
+                              message: _buildPersonaTooltip(
+                                  widget.selectedInstances[i]),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              textStyle: const TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'NouvelR',
+                                fontSize: 12,
+                              ),
+                              preferBelow: false,
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    // Main circle
+                                    Positioned(
+                                      top: 3,
+                                      left: 3,
+                                      child: Container(
+                                        width: 42,
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: const Color(0xFF535450),
+                                              width: 1),
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            // Persona sphere
+                                            Positioned.fill(
+                                              child: ClipOval(
+                                                child: Image.asset(
+                                                  widget.selectedInstances[i]
+                                                      .persona.sphereAsset,
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  // Number overlay
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF535450),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '${i + 1}',
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w400,
-                                            fontFamily: 'NouvelR',
-                                            color: Colors.white,
+                                    // Number overlay
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Container(
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF535450),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${i + 1}',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w400,
+                                              fontFamily: 'NouvelR',
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                         ],
@@ -579,7 +602,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
   Widget _buildResultView() {
     return SingleChildScrollView(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 760),
+        constraints: const BoxConstraints(maxWidth: 1000),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -613,14 +636,61 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                 ),
               ),
             ],
-            Text(
-              _analysisText,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w300,
-                fontFamily: 'NouvelR',
-                color: Colors.black,
-                height: 1.5,
+            MarkdownBody(
+              data: _analysisText,
+              styleSheet: MarkdownStyleSheet(
+                p: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w300,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                  height: 1.5,
+                ),
+                h1: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                ),
+                h2: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                ),
+                h3: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                ),
+                strong: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                ),
+                em: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                ),
+                listBullet: const TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                ),
+                code: const TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'Courier',
+                  backgroundColor: Color(0xFFF5F5F5),
+                  color: Color(0xFF535450),
+                ),
+                blockquote: const TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  fontFamily: 'NouvelR',
+                  color: Color(0xFF666666),
+                ),
               ),
             ),
           ],
@@ -632,7 +702,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
   Widget _buildRoundStepsView() {
     return SingleChildScrollView(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 760),
+        constraints: const BoxConstraints(maxWidth: 1000),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -743,13 +813,30 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                _discussionRounds[i]['message'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontFamily: 'NouvelR',
-                                  color: Color(0xFF333333),
-                                  height: 1.4,
+                              MarkdownBody(
+                                data: _discussionRounds[i]['message'],
+                                styleSheet: MarkdownStyleSheet(
+                                  p: const TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: 'NouvelR',
+                                    color: Color(0xFF333333),
+                                    height: 1.4,
+                                  ),
+                                  strong: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'NouvelR',
+                                    color: Color(0xFF333333),
+                                  ),
+                                  em: const TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                    fontFamily: 'NouvelR',
+                                    color: Color(0xFF333333),
+                                  ),
+                                  listBullet: const TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: 'NouvelR',
+                                    color: Color(0xFF333333),
+                                  ),
                                 ),
                               ),
                             ],
@@ -769,13 +856,25 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                   ['key_points'])
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 4),
-                                  child: Text(
-                                    point,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontFamily: 'NouvelR',
-                                      color: Color(0xFF444444),
-                                      height: 1.3,
+                                  child: MarkdownBody(
+                                    data: point,
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: const TextStyle(
+                                        fontSize: 13,
+                                        fontFamily: 'NouvelR',
+                                        color: Color(0xFF444444),
+                                        height: 1.3,
+                                      ),
+                                      strong: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'NouvelR',
+                                        color: Color(0xFF444444),
+                                      ),
+                                      em: const TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        fontFamily: 'NouvelR',
+                                        color: Color(0xFF444444),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -796,13 +895,25 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                   ['concerns'])
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 4),
-                                  child: Text(
-                                    concern,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontFamily: 'NouvelR',
-                                      color: Color(0xFF666666),
-                                      height: 1.3,
+                                  child: MarkdownBody(
+                                    data: concern,
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: const TextStyle(
+                                        fontSize: 13,
+                                        fontFamily: 'NouvelR',
+                                        color: Color(0xFF666666),
+                                        height: 1.3,
+                                      ),
+                                      strong: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'NouvelR',
+                                        color: Color(0xFF666666),
+                                      ),
+                                      em: const TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        fontFamily: 'NouvelR',
+                                        color: Color(0xFF666666),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -817,5 +928,14 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
         ),
       ),
     );
+  }
+
+  /// Build tooltip content for persona instance showing its settings
+  String _buildPersonaTooltip(PersonaInstance instance) {
+    return '${instance.persona.name}\n'
+        'Housing: ${instance.housingCondition.toStringAsFixed(1)}\n'
+        'Income: ${instance.income.toStringAsFixed(1)}\n'
+        'Age: ${instance.age.toStringAsFixed(1)}\n'
+        'Population: ${instance.population.toStringAsFixed(1)}';
   }
 }
