@@ -68,6 +68,13 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     }
   }
 
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _autoSelectSegmentFromPersona(PersonaData persona) {
     // Find matching segment based on persona name
     final matchingSegment = _segments.firstWhere(
@@ -89,18 +96,30 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   }
 
   Future<void> _initializeConversation() async {
-    if (_conversationManager.conversations.isEmpty) {
-      await _conversationManager.createConversation(title: 'Orizon Chat');
+    try {
+      if (_conversationManager.conversations.isEmpty) {
+        await _conversationManager.createConversation(title: 'Orizon Chat');
+      }
+    } catch (e) {
+      print('Error initializing conversation: $e');
+      // Fallback: ensure we have at least one conversation
+      if (mounted) {
+        setState(() {
+          // Add error handling state if needed
+        });
+      }
     }
   }
 
   void _selectSegment(CustomerSegment segment) {
-    setState(() {
-      _segments = _segments
-          .map((s) => s.copyWith(isSelected: s.id == segment.id))
-          .toList();
-      _selectedSegment = segment;
-    });
+    if (mounted) {
+      setState(() {
+        _segments = _segments
+            .map((s) => s.copyWith(isSelected: s.id == segment.id))
+            .toList();
+        _selectedSegment = segment;
+      });
+    }
   }
 
   Widget _buildEmptyChat() {
@@ -530,7 +549,9 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
     await _conversationManager.addMessageToCurrentConversation(userChatMessage);
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
 
     _scrollToBottom();
 
@@ -577,38 +598,59 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
           .addMessageToCurrentConversation(botChatMessage);
       _scrollToBottom();
     } catch (e) {
+      print('Send message error: $e');
+      try {
+        final errorMessage = ChatMessage(
+          text: 'Error: ${e.toString()}',
+          isUser: false,
+          timestamp: DateTime.now(),
+          isError: true,
+        );
+        await _conversationManager
+            .addMessageToCurrentConversation(errorMessage);
+        _scrollToBottom();
+      } catch (innerError) {
+        print('Error adding error message: $innerError');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> _addErrorMessage(String message) async {
+    try {
       final errorMessage = ChatMessage(
-        text: 'Error: ${e.toString()}',
+        text: message,
         isUser: false,
         timestamp: DateTime.now(),
         isError: true,
       );
       await _conversationManager.addMessageToCurrentConversation(errorMessage);
+      if (mounted) {
+        setState(() {});
+      }
       _scrollToBottom();
-    } finally {
-      setState(() {});
+    } catch (e) {
+      print('Error adding error message: $e');
     }
   }
 
-  Future<void> _addErrorMessage(String message) async {
-    final errorMessage = ChatMessage(
-      text: message,
-      isUser: false,
-      timestamp: DateTime.now(),
-      isError: true,
-    );
-    await _conversationManager.addMessageToCurrentConversation(errorMessage);
-    _scrollToBottom();
-  }
-
   void _scrollToBottom() {
+    if (!mounted) return;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      if (mounted && _scrollController.hasClients) {
+        try {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        } catch (e) {
+          print('Error scrolling to bottom: $e');
+        }
       }
     });
   }

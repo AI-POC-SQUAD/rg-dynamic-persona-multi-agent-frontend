@@ -16,8 +16,8 @@ COPY app/ ./
 #RUN touch .env
 COPY .env.prod /app/.env
 
-# Build Flutter web for production with explicit renderer
-RUN flutter build web --wasm --release
+# Build Flutter web for production
+RUN flutter build web --release
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
