@@ -57,6 +57,28 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Fix for Flutter web grey bar issue in production deployments */
+    flt-scene-host {
+      overflow: hidden !important;
+    }
+    
+    flt-scene {
+      overflow: hidden !important;
+    }
+    
+    /* Ensure full height for Flutter app */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    /* Fix for canvas rendering issues */
+    canvas {
+      display: block;
+    }
   </style>
 </head>
 <body>

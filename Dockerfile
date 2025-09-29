@@ -15,8 +15,8 @@ COPY app/ ./
 # Create a placeholder .env file if it doesn't exist (for build-time)
 RUN touch .env
 
-# Build Flutter web for production
-RUN flutter build web --release
+# Build Flutter web for production with explicit renderer
+RUN flutter build web --release --web-renderer html
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
