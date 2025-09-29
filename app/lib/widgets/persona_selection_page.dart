@@ -398,7 +398,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         Text(
                           persona.name,
                           style: const TextStyle(
-                            fontSize: 40,
+                            fontSize: 36,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'NouvelR',
                             color: Colors.black,

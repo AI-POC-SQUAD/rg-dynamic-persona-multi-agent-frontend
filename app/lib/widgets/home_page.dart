@@ -169,7 +169,6 @@ class _HomePageState extends State<HomePage>
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final screenWidth = constraints.maxWidth;
                         final screenHeight = constraints.maxHeight;
 
                         return Stack(
@@ -181,8 +180,6 @@ class _HomePageState extends State<HomePage>
                               child: SizedBox(
                                 width: screenHeight *
                                     1.5, // Much larger to match screenshot proportions
-                                // height:
-                                //     screenHeight * 1.0, // Square aspect, larger
                                 child: _useVideoPlayer && _isVideoInitialized
                                     ? ClipRRect(
                                         child: AspectRatio(
@@ -223,84 +220,6 @@ class _HomePageState extends State<HomePage>
                                           );
                                         },
                                       ),
-                              ),
-                            ),
-
-                            // Welcome message centered horizontally
-                            Positioned(
-                              left: screenWidth * 0.5 -
-                                  195, // Center the text block (approximate width 350px)
-                              top:
-                                  screenHeight * 0.34, // Keep vertical position
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Welcome message
-                                  RichText(
-                                    text: const TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: 'welcome, ',
-                                          style: TextStyle(
-                                            fontSize: 48,
-                                            fontWeight: FontWeight.w400,
-                                            fontFamily: 'NouvelR',
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: 'Nathalie',
-                                          style: TextStyle(
-                                              fontSize: 48,
-                                              fontWeight: FontWeight.w300,
-                                              fontFamily: 'NouvelR',
-                                              color: Colors.black,
-                                              decoration:
-                                                  TextDecoration.underline),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Interaction instructions centered below welcome text
-                            Positioned(
-                              left: screenWidth * 0.5 -
-                                  120, // Center the instructions (approximate width 245px)
-                              top: screenHeight * 0.41, // Below welcome text
-                              child: Row(
-                                children: [
-                                  const Text(
-                                    'Click to type',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      fontFamily: 'NouvelR',
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 24),
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF535450),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 24),
-                                  const Text(
-                                    'Press and hold',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      fontFamily: 'NouvelR',
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ],
@@ -351,6 +270,34 @@ class _HomePageState extends State<HomePage>
                           ),
                         ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Welcome message centered on entire screen - positioned last to appear on top
+            Positioned.fill(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Welcome message
+                    RichText(
+                      text: const TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Welcome',
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

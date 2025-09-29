@@ -106,7 +106,7 @@ class _SelectionPageState extends State<SelectionPage> {
                                 'STEP INTO THE EXPERIENCE YOU WANT',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 80,
+                                  fontSize: 60,
                                   fontWeight: FontWeight.w400,
                                   fontFamily: 'NouvelR',
                                   color: Colors.white,
