@@ -37,7 +37,7 @@ class PersonaData {
         id: 0,
         name: 'EV Skeptic',
         description:
-            'I drive an EV for environmental reasons, what matters to me is its positive impact. I use my car sparingly, for considered trips.',
+            '"I do not trust EVs and want longer ranges before I switch"',
         backgroundAsset: 'assets/images/persona_0.png',
         sphereAsset: 'assets/images/sphere_0.png',
       ),
@@ -45,7 +45,7 @@ class PersonaData {
         id: 1,
         name: 'Environment evangelists',
         description:
-            'I drive an EV for environmental reasons, what matters to me is its positive impact. I use my car sparingly, for considered trips.',
+            '"My life evolves around the environment, so an EV is the logical choice for a car"',
         backgroundAsset: 'assets/images/persona_1.png',
         sphereAsset: 'assets/images/sphere_1.png',
       ),
@@ -53,7 +53,7 @@ class PersonaData {
         id: 2,
         name: 'Price-conscious errand drivers',
         description:
-            'I drive an EV for environmental reasons, what matters to me is its positive impact. I use my car sparingly, for considered trips.',
+            '"EVs are the right thing for the environment but too expensive for me"',
         backgroundAsset: 'assets/images/persona_2.png',
         sphereAsset: 'assets/images/sphere_2.png',
       ),
@@ -61,7 +61,7 @@ class PersonaData {
         id: 3,
         name: 'Status-driven commuters',
         description:
-            'I drive an EV for environmental reasons, what matters to me is its positive impact. I use my car sparingly, for considered trips.',
+            '"I want to own an EV because of the status and the technology"',
         backgroundAsset: 'assets/images/persona_3.png',
         sphereAsset: 'assets/images/sphere_3.png',
       ),
@@ -69,7 +69,7 @@ class PersonaData {
         id: 4,
         name: 'Convenience buyers',
         description:
-            'I drive an EV for environmental reasons, what matters to me is its positive impact. I use my car sparingly, for considered trips.',
+            '"I’ll switch to EVs if I can integrate it seamlessly into my life"',
         backgroundAsset: 'assets/images/persona_4.png',
         sphereAsset: 'assets/images/sphere_4.png',
       ),

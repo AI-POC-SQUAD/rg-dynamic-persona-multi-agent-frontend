@@ -145,16 +145,6 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Before starting focus group',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w300,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
                         ],
                       ),
                       // PageView for personas
@@ -347,8 +337,8 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
       margin: const EdgeInsets.symmetric(horizontal: 64),
       child: Center(
         child: SizedBox(
-          width: 650 * 1.5, // Fixed width for better proportions
-          height: 334 * 1.7,
+          width: 650 * 1.3, // Fixed width for better proportions
+          height: 334 * 1.5,
           child: Stack(
             children: [
               // Background image (full width)
@@ -359,7 +349,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                     image: DecorationImage(
                       image: AssetImage(persona.backgroundAsset),
                       //fit: BoxFit.cover,
-                      alignment: AlignmentDirectional(4.5, -0.5),
+                      alignment: AlignmentDirectional(5.5, -0.5),
                       //fit: BoxFit.cover,
                     ),
                   ),
@@ -372,7 +362,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  width: 600, // Fixed width for card
+                  width: 500, // Fixed width for card
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(42),
@@ -406,7 +396,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                         Text(
                           persona.name,
                           style: const TextStyle(
-                            fontSize: 36,
+                            fontSize: 28,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
@@ -414,7 +404,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 42),
+                        const SizedBox(height: 24),
 
                         // Description or Sliders based on toggle
                         Expanded(
@@ -428,6 +418,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                                     fontFamily: 'NouvelR',
                                     color: Colors.black,
                                     height: 1.5,
+                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
                         ),
@@ -489,7 +480,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                               child: Text(
                                 persona.name,
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w200,
                                   fontFamily: 'NouvelR',
                                   color: Colors.black,
@@ -533,8 +524,8 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                                 ),
                                 child: Text(
                                   _selectedPersonas.length < 5
-                                      ? 'Select this Persona'
-                                      : 'Max 5 Selected',
+                                      ? 'Select'
+                                      : 'Max 5',
                                   style: const TextStyle(
                                     fontSize: 21,
                                     fontWeight: FontWeight.w200,
@@ -851,7 +842,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: _isStartButtonEnabled
-                      ? const Color(0xFF535450)
+                      ? const Color.fromARGB(255, 0, 0, 0)
                       : const Color(0xFFC4C4C4),
                   borderRadius: BorderRadius.circular(32),
                 ),

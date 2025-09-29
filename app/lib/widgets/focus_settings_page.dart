@@ -119,7 +119,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                       const Column(
                         children: [
                           Text(
-                            'Select a segment to converse',
+                            'Set up the conversation',
                             style: TextStyle(
                               fontSize: 40,
                               fontWeight: FontWeight.normal,
@@ -127,16 +127,6 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                               color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Before starting focus group',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w300,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
                           ),
                         ],
                       ),
@@ -221,8 +211,8 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
       margin: const EdgeInsets.symmetric(horizontal: 64),
       child: Center(
         child: SizedBox(
-          width: 650 * 1.5, // Fixed width for better proportions
-          height: 334 * 1.7,
+          width: 650 * 1.3, // Fixed width for better proportions
+          height: 334 * 1.5,
           child: Stack(
             children: [
               // Background image (full width)
@@ -232,7 +222,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                     borderRadius: BorderRadius.circular(42),
                     image: DecorationImage(
                       image: AssetImage(persona.backgroundAsset),
-                      alignment: AlignmentDirectional(4.5, -0.5),
+                      alignment: AlignmentDirectional(5.5, -0.5),
                     ),
                   ),
                 ),
@@ -244,7 +234,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  width: 600, // Fixed width for card
+                  width: 500, // Fixed width for card
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(42),
@@ -272,8 +262,6 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                         ),
 
                         const SizedBox(height: 16),
-
-                        const SizedBox(height: 24),
 
                         // "Define the depth of the conversation" text
                         Center(

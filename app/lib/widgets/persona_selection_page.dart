@@ -118,16 +118,6 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Before starting conversation',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w300,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
                         ],
                       ),
                       // PageView for personas
@@ -339,8 +329,8 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
       margin: const EdgeInsets.symmetric(horizontal: 64),
       child: Center(
         child: SizedBox(
-          width: 650 * 1.5, // Fixed width for better proportions
-          height: 334 * 1.7,
+          width: 650 * 1.3, // Fixed width for better proportions
+          height: 334 * 1.5,
           child: Stack(
             children: [
               // Background image (full width)
@@ -351,7 +341,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                     image: DecorationImage(
                       image: AssetImage(persona.backgroundAsset),
                       //fit: BoxFit.cover,
-                      alignment: AlignmentDirectional(4.5, -0.5),
+                      alignment: AlignmentDirectional(5.5, -0.5),
                       //fit: BoxFit.cover,
                     ),
                   ),
@@ -364,7 +354,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  width: 600, // Fixed width for card
+                  width: 500, // Fixed width for card
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(42),
@@ -398,7 +388,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                         Text(
                           persona.name,
                           style: const TextStyle(
-                            fontSize: 36,
+                            fontSize: 28,
                             fontWeight: FontWeight.w400,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
@@ -406,7 +396,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 42),
+                        const SizedBox(height: 24),
 
                         // Description or Sliders based on toggle
                         Expanded(
@@ -420,6 +410,7 @@ class _PersonaSelectionPageState extends State<PersonaSelectionPage> {
                                     fontFamily: 'NouvelR',
                                     color: Colors.black,
                                     height: 1.5,
+                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
                         ),

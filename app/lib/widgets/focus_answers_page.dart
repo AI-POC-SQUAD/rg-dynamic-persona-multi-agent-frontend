@@ -602,7 +602,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
   Widget _buildResultView() {
     return SingleChildScrollView(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 1000),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -640,26 +640,26 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
               data: _analysisText,
               styleSheet: MarkdownStyleSheet(
                 p: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w300,
                   fontFamily: 'NouvelR',
                   color: Colors.black,
                   height: 1.5,
                 ),
                 h1: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'NouvelR',
                   color: Colors.black,
                 ),
                 h2: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'NouvelR',
                   color: Colors.black,
                 ),
                 h3: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'NouvelR',
                   color: Colors.black,
@@ -675,18 +675,18 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                   color: Colors.black,
                 ),
                 listBullet: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontFamily: 'NouvelR',
                   color: Colors.black,
                 ),
                 code: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontFamily: 'Courier',
                   backgroundColor: Color(0xFFF5F5F5),
                   color: Color(0xFF535450),
                 ),
                 blockquote: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontStyle: FontStyle.italic,
                   fontFamily: 'NouvelR',
                   color: Color(0xFF666666),
