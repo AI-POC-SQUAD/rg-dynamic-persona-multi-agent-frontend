@@ -17,7 +17,7 @@ COPY app/ ./
 COPY .env.prod /app/.env
 
 # Build Flutter web for production with explicit renderer
-RUN flutter build web --release --web-renderer html
+RUN flutter build web --wasm --release
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
