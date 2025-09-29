@@ -17,7 +17,7 @@ COPY app/ ./
 COPY .env.prod /app/.env
 
 # Build Flutter web for production
-RUN flutter build web --release
+RUN flutter build web --profile
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
