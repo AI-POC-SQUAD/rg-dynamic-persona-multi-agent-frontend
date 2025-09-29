@@ -932,10 +932,6 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
 
   /// Build tooltip content for persona instance showing its settings
   String _buildPersonaTooltip(PersonaInstance instance) {
-    return '${instance.persona.name}\n'
-        'Housing: ${instance.housingCondition.toStringAsFixed(1)}\n'
-        'Income: ${instance.income.toStringAsFixed(1)}\n'
-        'Age: ${instance.age.toStringAsFixed(1)}\n'
-        'Population: ${instance.population.toStringAsFixed(1)}';
+    return '${instance.persona.name}\n${instance.settingsSummary}';
   }
 }
