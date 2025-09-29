@@ -289,7 +289,8 @@ class ApiClient {
             'Server error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      if (e.toString().contains('XMLHttpRequest')) {
+      if (e.toString().contains('XMLHttpRequest') ||
+          e.toString().contains('Network error')) {
         // Network/CORS error
         throw Exception(
             'Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
@@ -297,5 +298,125 @@ class ApiClient {
       print('❌ Error loading persona: $e');
       rethrow;
     }
+  }
+
+  /// Start a focus group discussion with multiple personas
+  Future<Map<String, dynamic>> startFocusGroup(
+    String userId,
+    String topic,
+    List<Map<String, dynamic>> profiles,
+    int maxRounds, {
+    String domain = "Electric Vehicles",
+    bool enableIterativeDiscussion = true,
+    int timeoutSeconds = 300,
+  }) async {
+    try {
+      final url = '${_getApiUrl}/panel-discussion';
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+
+      // Add authentication based on configuration
+      final config = getRuntimeConfig();
+      final authMode = config?['AUTH_MODE'] ?? 'none';
+      final bearerToken = config?['BEARER_TOKEN'];
+      final authToken = config?['AUTH_TOKEN']; // Legacy support
+      final iapMode = config?['IAP_MODE'] == true;
+
+      if (authMode == 'bearer' &&
+          bearerToken != null &&
+          bearerToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $bearerToken';
+      } else if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      } else if (iapMode) {
+        print('Using IAP mode for authentication');
+      }
+
+      // Ensure profiles have the correct threshold value (25.0 by default)
+      final profilesWithThreshold = profiles.map((profile) {
+        final updatedProfile = Map<String, dynamic>.from(profile);
+        if (!updatedProfile.containsKey('threshold')) {
+          updatedProfile['threshold'] = 25.0;
+        }
+        return updatedProfile;
+      }).toList();
+
+      // Build request payload following the specified format
+      final requestPayload = <String, dynamic>{
+        'user_id': userId,
+        'idea': topic,
+        'domain': domain,
+        'profiles': profilesWithThreshold,
+        'max_discussion_rounds': maxRounds,
+        'enable_iterative_discussion': enableIterativeDiscussion,
+        'timeout_seconds': timeoutSeconds,
+      };
+
+      final requestBody = jsonEncode(requestPayload);
+
+      // Debug logging
+      print('🚀 Starting focus group');
+      print('🎯 Topic: $topic');
+      print('👥 Profiles: ${profilesWithThreshold.length}');
+      print('🔄 Max rounds: $maxRounds');
+      print('📡 URL: $url');
+      for (int i = 0; i < profilesWithThreshold.length; i++) {
+        final profile = profilesWithThreshold[i];
+        print(
+            '👤 Profile ${i + 1}: ${profile['name']} (housing: ${profile['housing_condition']}, income: ${profile['income']}, age: ${profile['age']}, population: ${profile['population']}, threshold: ${profile['threshold']})');
+      }
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: requestBody,
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print('✅ Focus group started successfully');
+        print('📊 Request ID: ${responseData['request_id']}');
+        return responseData;
+      } else if (response.statusCode == 401) {
+        throw Exception(
+            'Authentication failed. Please check your token or sign in.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Access forbidden. Check your permissions.');
+      } else {
+        throw Exception(
+            'Server error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      if (e.toString().contains('XMLHttpRequest') ||
+          e.toString().contains('Network error')) {
+        throw Exception(
+            'Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
+      }
+      print('❌ Error starting focus group: $e');
+      rethrow;
+    }
+  }
+
+  /// Build a profile object from persona instance data for focus group API
+  static Map<String, dynamic> buildFocusGroupProfile(
+    String personaName,
+    int housingCondition,
+    int income,
+    int age,
+    int population, {
+    int gender = 1,
+    double threshold = 25.0,
+  }) {
+    return {
+      'name': personaName,
+      'housing_condition': housingCondition,
+      'income': income,
+      'age': age,
+      'population': population,
+      'gender': gender,
+      'threshold': threshold,
+    };
   }
 }

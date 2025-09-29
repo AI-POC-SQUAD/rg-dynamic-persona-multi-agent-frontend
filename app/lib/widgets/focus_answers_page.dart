@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../models/persona_data.dart';
 import '../models/persona_instance.dart';
+import '../services/api_client.dart';
 
 class FocusAnswersPage extends StatefulWidget {
   final List<PersonaData> selectedPersonas;
@@ -23,12 +25,84 @@ class FocusAnswersPage extends StatefulWidget {
 class _FocusAnswersPageState extends State<FocusAnswersPage> {
   bool _showRoundSteps = false; // Toggle between Result and Round Steps
   String _analysisText = '';
+  List<Map<String, dynamic>> _discussionRounds = [];
+  bool _isLoading = true;
+  String? _error;
+  String? _requestId;
+  final ApiClient _apiClient = ApiClient();
+  final Uuid _uuid = Uuid();
 
   @override
   void initState() {
     super.initState();
-    // Initialize with mock analysis text based on the Figma design
-    _analysisText = _getMockAnalysisText();
+    _startFocusGroup();
+  }
+
+  /// Start the focus group discussion via API
+  Future<void> _startFocusGroup() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      // Generate user ID for this session
+      final userId = _uuid.v4();
+
+      // Build profiles from selected persona instances
+      final profiles = widget.selectedInstances.map((instance) {
+        return ApiClient.buildFocusGroupProfile(
+          instance.persona.backendPersonaName,
+          instance.housingCondition.round(),
+          instance.income.round(),
+          instance.age.round(),
+          instance.population.round(),
+          gender: 1, // Default gender
+          threshold: 25.0, // Keep threshold at 25.0 as requested
+        );
+      }).toList();
+
+      print('🎯 Starting focus group with profiles:');
+      for (final profile in profiles) {
+        print(
+            '  - ${profile['name']}: housing=${profile['housing_condition']}, income=${profile['income']}, age=${profile['age']}, population=${profile['population']}');
+      }
+
+      // Call the API
+      final response = await _apiClient.startFocusGroup(
+        userId,
+        widget.topic,
+        profiles,
+        widget.rounds,
+        domain: "Electric Vehicles",
+        enableIterativeDiscussion: true,
+        timeoutSeconds: 300,
+      );
+
+      // Process the response
+      if (response['status'] == 'success') {
+        setState(() {
+          _requestId = response['request_id'];
+          _analysisText =
+              response['executive_summary'] ?? _getMockAnalysisText();
+          _discussionRounds =
+              List<Map<String, dynamic>>.from(response['discussion'] ?? []);
+          _isLoading = false;
+        });
+        print(
+            '✅ Focus group completed with ${_discussionRounds.length} discussion turns');
+      } else {
+        throw Exception('Focus group failed: ${response['status']}');
+      }
+    } catch (e) {
+      print('❌ Error starting focus group: $e');
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+        // Fall back to mock data
+        _analysisText = _getMockAnalysisText();
+      });
+    }
   }
 
   String _getMockAnalysisText() {
@@ -225,9 +299,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(80),
-                    child: _showRoundSteps
-                        ? _buildRoundStepsView()
-                        : _buildResultView(),
+                    child: _buildContentArea(),
                   ),
                 ),
 
@@ -423,19 +495,135 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
     );
   }
 
+  Widget _buildContentArea() {
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              color: Color(0xFF535450),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Starting focus group discussion...',
+              style: const TextStyle(
+                fontSize: 18,
+                fontFamily: 'NouvelR',
+                color: Color(0xFF535450),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This may take a few moments',
+              style: const TextStyle(
+                fontSize: 14,
+                fontFamily: 'NouvelR',
+                color: Color(0xFF999999),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Colors.red[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to start focus group',
+              style: const TextStyle(
+                fontSize: 18,
+                fontFamily: 'NouvelR',
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'NouvelR',
+                  color: Color(0xFF666666),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _startFocusGroup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF535450),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _showRoundSteps ? _buildRoundStepsView() : _buildResultView();
+  }
+
   Widget _buildResultView() {
     return SingleChildScrollView(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 760),
-        child: Text(
-          _analysisText,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w300,
-            fontFamily: 'NouvelR',
-            color: Colors.black,
-            height: 1.5,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_requestId != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Color(0xFF535450),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Request ID: $_requestId',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'NouvelR',
+                          color: Color(0xFF535450),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            Text(
+              _analysisText,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+                fontFamily: 'NouvelR',
+                color: Colors.black,
+                height: 1.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -449,7 +637,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Focus Group Rounds Progress',
+              'Discussion Rounds (${_discussionRounds.length} turns)',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w400,
@@ -458,57 +646,173 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
               ),
             ),
             const SizedBox(height: 24),
-            for (int round = 1; round <= widget.rounds; round++)
+            if (_discussionRounds.isEmpty)
               Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: ExpansionTile(
-                  title: Text(
-                    'Round $round',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black,
-                    ),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'No discussion rounds available yet.',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'NouvelR',
+                    color: Color(0xFF666666),
                   ),
-                  children: [
-                    for (int i = 0; i < widget.selectedInstances.length; i++)
-                      ListTile(
-                        leading: Container(
-                          width: 32,
-                          height: 32,
+                ),
+              )
+            else
+              for (int i = 0; i < _discussionRounds.length; i++)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
+                  ),
+                  child: ExpansionTile(
+                    title: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF535450)),
+                            color: const Color(0xFF535450),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              widget.selectedInstances[i].persona.sphereAsset,
-                              fit: BoxFit.cover,
+                          child: Center(
+                            child: Text(
+                              '${_discussionRounds[i]['turn'] ?? i}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'NouvelR',
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                        title: Text(
-                          widget.selectedInstances[i].persona.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontFamily: 'NouvelR',
-                            fontWeight: FontWeight.w400,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _discussionRounds[i]['speaker'] ??
+                                'Unknown Speaker',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                        subtitle: Text(
-                          'Round $round response would appear here...',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'NouvelR',
-                            fontWeight: FontWeight.w300,
-                            color: Color(0xFF666666),
+                        if (_discussionRounds[i]['confidence'] != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0F0F0),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${(_discussionRounds[i]['confidence'] as double).toStringAsFixed(1)}%',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'NouvelR',
+                                color: Color(0xFF666666),
+                              ),
+                            ),
                           ),
+                      ],
+                    ),
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_discussionRounds[i]['message'] != null) ...[
+                              Text(
+                                'Message:',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _discussionRounds[i]['message'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: 'NouvelR',
+                                  color: Color(0xFF333333),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                            if (_discussionRounds[i]['key_points'] != null) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                'Key Points:',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              for (final point in _discussionRounds[i]
+                                  ['key_points'])
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    point,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontFamily: 'NouvelR',
+                                      color: Color(0xFF444444),
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                            if (_discussionRounds[i]['concerns'] != null) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                'Concerns:',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              for (final concern in _discussionRounds[i]
+                                  ['concerns'])
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    concern,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontFamily: 'NouvelR',
+                                      color: Color(0xFF666666),
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ],
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
           ],
         ),
       ),
