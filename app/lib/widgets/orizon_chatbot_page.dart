@@ -884,7 +884,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
       'age': _age.round(),
       'population': invertedPopulation,
       'gender': 'male', // Fixed as per requirement
-      'threshold': 50.0, // Fixed as per requirement
+      'threshold': 20.0, // Fixed as per requirement
     };
 
     // Debug logging to verify slider values are being used

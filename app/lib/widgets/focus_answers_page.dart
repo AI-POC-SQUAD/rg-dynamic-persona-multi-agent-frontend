@@ -58,8 +58,8 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
           instance.income.round(),
           instance.age.round(),
           instance.population.round(),
-          gender: 1, // Default gender
-          threshold: 25.0, // Keep threshold at 25.0 as requested
+          gender: 'male', // Default gender
+          threshold: 20.0, // Keep threshold at 25.0 as requested
         );
       }).toList();
 

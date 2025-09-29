@@ -263,60 +263,6 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
 
                         const SizedBox(height: 16),
 
-                        // "Define the depth of the conversation" text
-                        Center(
-                          child: const Text(
-                            'Define the depth of the conversation.',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w400,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Rounds input field (centered)
-                        Center(
-                          child: Container(
-                            width: 400,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                  color: const Color(0xFFC4C4C4), width: 1),
-                            ),
-                            child: TextField(
-                              controller: _roundsController,
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                hintText: 'Indicate how many rounds',
-                                hintStyle: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w300,
-                                  fontFamily: 'NouvelR',
-                                  color: Color(0xFFC4C4C4),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
-                              ),
-                              keyboardType: TextInputType.number,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'NouvelR',
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 48),
-
                         Center(
                           child: const Text(
                             'Define the conversation topic.',
@@ -335,7 +281,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                         Center(
                           child: Container(
                             width: 400,
-                            height: 60,
+                            height: 120,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(30),
@@ -345,6 +291,8 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                             child: TextField(
                               controller: _topicController,
                               textAlign: TextAlign.center,
+                              maxLines: null, // Allow unlimited lines
+                              minLines: 3, // Start with 3 lines visible
                               decoration: const InputDecoration(
                                 hintText: 'Enter discussion topic',
                                 hintStyle: TextStyle(
@@ -357,7 +305,63 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                 contentPadding: EdgeInsets.symmetric(
                                     horizontal: 30, vertical: 15),
                               ),
-                              keyboardType: TextInputType.text,
+                              keyboardType: TextInputType.multiline,
+                              textInputAction: TextInputAction
+                                  .newline, // Allow enter key for new lines
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'NouvelR',
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // "Define the depth of the conversation" text
+                        Center(
+                          child: const Text(
+                            'How many rounds ?',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Rounds input field (centered)
+                        Center(
+                          child: Container(
+                            width: 200,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                  color: const Color(0xFFC4C4C4), width: 1),
+                            ),
+                            child: TextField(
+                              controller: _roundsController,
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                hintText: 'Rounds no.',
+                                hintStyle: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w300,
+                                  fontFamily: 'NouvelR',
+                                  color: Color(0xFFC4C4C4),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 15),
+                              ),
+                              keyboardType: TextInputType.number,
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w400,

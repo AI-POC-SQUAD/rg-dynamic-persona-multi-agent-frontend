@@ -340,7 +340,7 @@ class ApiClient {
       final profilesWithThreshold = profiles.map((profile) {
         final updatedProfile = Map<String, dynamic>.from(profile);
         if (!updatedProfile.containsKey('threshold')) {
-          updatedProfile['threshold'] = 25.0;
+          updatedProfile['threshold'] = 20.0;
         }
         return updatedProfile;
       }).toList();
@@ -408,8 +408,8 @@ class ApiClient {
     int income,
     int age,
     int population, {
-    int gender = 1,
-    double threshold = 25.0,
+    String gender = 'male',
+    double threshold = 20.0,
   }) {
     return {
       'name': personaName,
