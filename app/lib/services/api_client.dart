@@ -46,8 +46,8 @@ class ApiClient {
     final backendUrl = backendBaseUrl;
 
     if (useCorsProxy) {
-      print('🔄 Using CORS proxy: $corsProxyUrl/$backendUrl');
-      return '$corsProxyUrl/$backendUrl';
+      print('🔄 Using CORS proxy: $corsProxyUrl$backendUrl');
+      return '$corsProxyUrl$backendUrl';
     }
 
     return backendUrl;
