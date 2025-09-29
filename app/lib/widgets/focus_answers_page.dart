@@ -29,7 +29,6 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
   List<Map<String, dynamic>> _discussionRounds = [];
   bool _isLoading = true;
   String? _error;
-  String? _requestId;
   final ApiClient _apiClient = ApiClient();
   final Uuid _uuid = Uuid();
 
@@ -83,7 +82,6 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
       // Process the response
       if (response['status'] == 'success') {
         setState(() {
-          _requestId = response['request_id'];
           _analysisText =
               response['executive_summary'] ?? _getMockAnalysisText();
           _discussionRounds =
@@ -606,36 +604,6 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_requestId != null) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: Color(0xFF535450),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Request ID: $_requestId',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'NouvelR',
-                          color: Color(0xFF535450),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             MarkdownBody(
               data: _analysisText,
               styleSheet: MarkdownStyleSheet(
