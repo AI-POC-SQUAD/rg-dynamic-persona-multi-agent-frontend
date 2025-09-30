@@ -45,7 +45,9 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   double _population = 3.0; // Range 1-5, mid-point = 3
   double _age = 5.0; // Range 1-10, mid-point = 5
 
-  // Animation controllers
+  // Loading state and animation controllers
+  bool _isThinking = false;
+  late AnimationController _thinkingAnimationController;
 
   @override
   void initState() {
@@ -58,6 +60,10 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
     _age = widget.age ?? 5.0;
 
     // Initialize animation controllers
+    _thinkingAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
 
     _loadRuntimeConfig();
     _initializeConversation();
@@ -72,6 +78,7 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _thinkingAnimationController.dispose();
     super.dispose();
   }
 
@@ -172,12 +179,20 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
             child: ListView.builder(
               reverse: true,
               itemCount:
-                  _conversationManager.currentConversation?.messages.length ??
-                      0,
+                  (_conversationManager.currentConversation?.messages.length ??
+                          0) +
+                      (_isThinking ? 1 : 0),
               itemBuilder: (context, index) {
+                // Show thinking loader as the first item (at index 0 when reversed)
+                if (_isThinking && index == 0) {
+                  return _buildThinkingLoader();
+                }
+
+                // Adjust index for messages when thinking loader is present
+                final messageIndex = _isThinking ? index - 1 : index;
                 final messages =
                     _conversationManager.currentConversation!.messages;
-                final message = messages[messages.length - 1 - index];
+                final message = messages[messages.length - 1 - messageIndex];
                 return _buildMessageBubble(message);
               },
             ),
@@ -620,6 +635,14 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
 
     _scrollToBottom();
 
+    // Show thinking loader
+    if (mounted) {
+      setState(() {
+        _isThinking = true;
+      });
+    }
+    _scrollToBottom();
+
     try {
       final currentConversation = _conversationManager.currentConversation;
 
@@ -678,8 +701,11 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
         print('Error adding error message: $innerError');
       }
     } finally {
+      // Hide thinking loader
       if (mounted) {
-        setState(() {});
+        setState(() {
+          _isThinking = false;
+        });
       }
     }
   }
@@ -862,6 +888,124 @@ class _OrizonChatBotPageState extends State<OrizonChatBotPage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Build thinking loader widget with animated dots
+  Widget _buildThinkingLoader() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AI Avatar
+          Container(
+            width: 32,
+            height: 32,
+            margin: const EdgeInsets.only(right: 12, top: 4),
+            decoration: const BoxDecoration(
+              color: Color(0xFF4ECDC4),
+              shape: BoxShape.circle,
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 1,
+                  top: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(13),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(_selectedSegment!.iconPath),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Thinking bubble
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.35,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_selectedSegment != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${_selectedSegment!.name}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                        fontFamily: 'NouvelR',
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                // Animated thinking dots
+                AnimatedBuilder(
+                  animation: _thinkingAnimationController,
+                  builder: (context, child) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'thinking',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontFamily: 'NouvelR',
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _buildAnimatedDot(0),
+                        const SizedBox(width: 2),
+                        _buildAnimatedDot(1),
+                        const SizedBox(width: 2),
+                        _buildAnimatedDot(2),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build individual animated dot for thinking animation
+  Widget _buildAnimatedDot(int index) {
+    final delay = index * 0.2;
+    final animationValue = (_thinkingAnimationController.value + delay) % 1.0;
+    final opacity =
+        (0.3 + 0.7 * (1 - (animationValue - 0.5).abs() * 2)).clamp(0.3, 1.0);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 100),
+      width: 4,
+      height: 4,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(opacity),
+        shape: BoxShape.circle,
       ),
     );
   }
