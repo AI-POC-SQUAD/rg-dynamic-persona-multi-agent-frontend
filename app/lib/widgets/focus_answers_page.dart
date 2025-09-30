@@ -23,7 +23,8 @@ class FocusAnswersPage extends StatefulWidget {
   State<FocusAnswersPage> createState() => _FocusAnswersPageState();
 }
 
-class _FocusAnswersPageState extends State<FocusAnswersPage> {
+class _FocusAnswersPageState extends State<FocusAnswersPage>
+    with TickerProviderStateMixin {
   bool _showRoundSteps = false; // Toggle between Result and Round Steps
   String _analysisText = '';
   List<Map<String, dynamic>> _discussionRounds = [];
@@ -32,10 +33,53 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
   final ApiClient _apiClient = ApiClient();
   final Uuid _uuid = Uuid();
 
+  // Breathing animation controller
+  late AnimationController _breathingController;
+  late Animation<double> _breathingAnimation;
+  late Animation<Color?> _colorAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize breathing animation
+    _breathingController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _breathingAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _breathingController,
+      curve: Curves.easeInOut,
+    ));
+
+    _colorAnimation = TweenSequence<Color?>([
+      TweenSequenceItem(
+        tween: ColorTween(
+          begin: const Color(0xFFBF046B), // #BF046B
+          end: const Color(0xFFF26716), // #F26716
+        ),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: ColorTween(
+          begin: const Color(0xFFF26716), // #F26716
+          end: const Color(0xFFBF046B), // #BF046B
+        ),
+        weight: 50,
+      ),
+    ]).animate(_breathingController);
+
     _startFocusGroup();
+  }
+
+  @override
+  void dispose() {
+    _breathingController.dispose();
+    super.dispose();
   }
 
   /// Start the focus group discussion via API
@@ -45,6 +89,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
         _isLoading = true;
         _error = null;
       });
+
+      // Start breathing animation
+      _breathingController.repeat();
 
       // Generate user ID for this session
       final userId = _uuid.v4();
@@ -88,6 +135,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
               List<Map<String, dynamic>>.from(response['discussion'] ?? []);
           _isLoading = false;
         });
+
+        // Stop breathing animation
+        _breathingController.stop();
         print(
             '✅ Focus group completed with ${_discussionRounds.length} discussion turns');
       } else {
@@ -101,6 +151,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage> {
         // Fall back to mock data
         _analysisText = _getMockAnalysisText();
       });
+
+      // Stop breathing animation
+      _breathingController.stop();
     }
   }
 
@@ -302,131 +355,149 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                   ),
                 ),
 
-                // Bottom conversation section (reused from focus_settings_page)
-                Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 80, vertical: 24),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Subject: ${widget.topic}',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: 'NouvelR',
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Selected personas row (reused from focus_settings_page)
-                      Row(
-                        children: [
-                          for (int i = 0;
-                              i < widget.selectedInstances.length;
-                              i++)
-                            Tooltip(
-                              message: _buildPersonaTooltip(
-                                  widget.selectedInstances[i]),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              textStyle: const TextStyle(
-                                color: Colors.black,
-                                fontFamily: 'NouvelR',
-                                fontSize: 12,
-                              ),
-                              preferBelow: false,
-                              child: Container(
-                                width: 48,
-                                height: 48,
-                                margin: const EdgeInsets.only(right: 8),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    // Main circle
-                                    Positioned(
-                                      top: 3,
-                                      left: 3,
-                                      child: Container(
-                                        width: 42,
-                                        height: 42,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: const Color(0xFF535450),
-                                              width: 1),
-                                        ),
-                                        child: Stack(
-                                          children: [
-                                            // Persona sphere
-                                            Positioned.fill(
-                                              child: ClipOval(
-                                                child: Image.asset(
-                                                  widget.selectedInstances[i]
-                                                      .persona.sphereAsset,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    // Number overlay
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: Container(
-                                        width: 16,
-                                        height: 16,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF535450),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '${i + 1}',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              fontFamily: 'NouvelR',
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                // Bottom conversation section with breathing animation
+                AnimatedBuilder(
+                  animation: _breathingController,
+                  builder: (context, child) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 80, vertical: 24),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                          // Breathing effect - only show when loading
+                          if (_isLoading)
+                            BoxShadow(
+                              color: _colorAnimation.value?.withOpacity(0.6) ??
+                                  Colors.transparent,
+                              blurRadius: 30 + (20 * _breathingAnimation.value),
+                              spreadRadius:
+                                  5 + (10 * _breathingAnimation.value),
+                              offset: const Offset(0, 0),
                             ),
                         ],
                       ),
-                    ],
-                  ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Subject: ${widget.topic}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Selected personas row (reused from focus_settings_page)
+                          Row(
+                            children: [
+                              for (int i = 0;
+                                  i < widget.selectedInstances.length;
+                                  i++)
+                                Tooltip(
+                                  message: _buildPersonaTooltip(
+                                      widget.selectedInstances[i]),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  textStyle: const TextStyle(
+                                    color: Colors.black,
+                                    fontFamily: 'NouvelR',
+                                    fontSize: 12,
+                                  ),
+                                  preferBelow: false,
+                                  child: Container(
+                                    width: 48,
+                                    height: 48,
+                                    margin: const EdgeInsets.only(right: 8),
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // Main circle
+                                        Positioned(
+                                          top: 3,
+                                          left: 3,
+                                          child: Container(
+                                            width: 42,
+                                            height: 42,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                  color:
+                                                      const Color(0xFF535450),
+                                                  width: 1),
+                                            ),
+                                            child: Stack(
+                                              children: [
+                                                // Persona sphere
+                                                Positioned.fill(
+                                                  child: ClipOval(
+                                                    child: Image.asset(
+                                                      widget
+                                                          .selectedInstances[i]
+                                                          .persona
+                                                          .sphereAsset,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        // Number overlay
+                                        Positioned(
+                                          top: 0,
+                                          right: 0,
+                                          child: Container(
+                                            width: 16,
+                                            height: 16,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF535450),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                '${i + 1}',
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w400,
+                                                  fontFamily: 'NouvelR',
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
 
                 // Bottom explorer text (reused from focus_settings_page)
