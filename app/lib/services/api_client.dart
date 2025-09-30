@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
+  static const Duration _httpTimeout = Duration(seconds: 300);
   Map<String, dynamic>? _runtimeConfig;
 
   /// Get runtime configuration from .env file using flutter_dotenv
@@ -151,7 +152,7 @@ class ApiClient {
         Uri.parse(url),
         headers: headers,
         body: requestBody,
-      );
+      ).timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -199,7 +200,7 @@ class ApiClient {
   /// Health check endpoint
   Future<bool> checkHealth() async {
     try {
-      final response = await http.get(Uri.parse('/health'));
+      final response = await http.get(Uri.parse('/health')).timeout(_httpTimeout);
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -214,7 +215,7 @@ class ApiClient {
       final response = await http.get(
         Uri.parse('${_getApiUrl}/profile'),
         headers: {'Content-Type': 'application/json'},
-      );
+      ).timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -275,7 +276,7 @@ class ApiClient {
         Uri.parse(url),
         headers: headers,
         body: requestBody,
-      );
+      ).timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -374,7 +375,7 @@ class ApiClient {
         Uri.parse(url),
         headers: headers,
         body: requestBody,
-      );
+      ).timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
