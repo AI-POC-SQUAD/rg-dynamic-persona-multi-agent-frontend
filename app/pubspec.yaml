@@ -14,9 +14,7 @@ dependencies:
   http: ^0.13.0
   uuid: ^3.0.7
   cupertino_icons: ^1.0.6
-  video_player: ^2.8.1
   flutter_dotenv: ^5.1.0
-  shared_preferences: ^2.2.2
   flutter_markdown: ^0.7.4
 
 dev_dependencies:
@@ -30,7 +28,6 @@ flutter:
   # Add assets here for the new Orizon UI
   assets:
     - .env
-    - assets/videos/sphere_animation.mp4
     - assets/images/persona_0.png
     - assets/images/persona_1.png
     - assets/images/persona_2.png

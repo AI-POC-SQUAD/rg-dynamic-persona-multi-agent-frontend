@@ -15,30 +15,16 @@ class FocusPersonaSelectionPage extends StatefulWidget {
 class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
-  List<PersonaData> personas = PersonaData.getPersonas();
-  bool _showDescriptionView = false;
+  final List<PersonaData> personas = PersonaData.getPersonas();
 
   // Selected persona instances for focus group (max 5)
-  List<PersonaInstance> _selectedPersonas = [];
-
-  // Slider values for description view (starting at mid-point for each range)
-  double _housingCondition = 4.0; // Range 1-8, mid-point = 4
-  double _income = 7.0; // Range 1-13, mid-point = 7
-  double _population = 3.0; // Range 1-5, mid-point = 3
-  double _age = 5.0; // Range 1-10, mid-point = 5
+  final List<PersonaInstance> _selectedPersonas = [];
 
   void _selectPersona(PersonaData persona) {
     setState(() {
       // Always add a new instance with current settings (no more max limit check for same persona)
       if (_selectedPersonas.length < 5) {
-        final instance = PersonaInstance.fromSettings(
-          persona: persona,
-          housingCondition: _housingCondition,
-          income: _income,
-          population: _population,
-          age: _age,
-        );
-        _selectedPersonas.add(instance);
+        _selectedPersonas.add(PersonaInstance.defaultFor(persona));
       }
     });
   }
@@ -74,9 +60,9 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top row with title and close button
+                      // Top row with title
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           // DYNAMIC PERSONA title (matching Figma layout)
                           Column(
@@ -103,24 +89,6 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                                 ),
                               ),
                             ],
-                          ),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                    color: const Color(0xFFC4C4C4), width: 0.5),
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Color(0xFF535450),
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -251,7 +219,8 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                                   decoration: BoxDecoration(
                                     color: index == _currentIndex
                                         ? Colors.black
-                                        : Colors.black.withOpacity(0.3),
+                                        : Colors.black
+                                            .withValues(alpha: 0.3),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -368,7 +337,7 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                     borderRadius: BorderRadius.circular(42),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 60,
                         offset: const Offset(0, 0),
                       ),
@@ -406,21 +375,19 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
 
                         const SizedBox(height: 24),
 
-                        // Description or Sliders based on toggle
+                        // Persona description
                         Expanded(
-                          child: _showDescriptionView
-                              ? _buildDescriptionSliders()
-                              : Text(
-                                  persona.description,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w300,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.black,
-                                    height: 1.5,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
+                          child: Text(
+                            persona.description,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w300,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                              height: 1.5,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
 
                         const SizedBox(height: 24),
@@ -485,24 +452,6 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                                   fontFamily: 'NouvelR',
                                   color: Colors.black,
                                 ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 8),
-
-                            // Settings icon
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _showDescriptionView = !_showDescriptionView;
-                                });
-                              },
-                              child: Icon(
-                                _showDescriptionView
-                                    ? Icons.person
-                                    : Icons.settings,
-                                size: 24,
-                                color: Color(0xFF535450),
                               ),
                             ),
 
@@ -571,138 +520,6 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDescriptionSliders() {
-    return Column(
-      children: [
-        // Housing Condition Slider (1-8)
-        _buildSlider(
-          'Housing Condition',
-          _housingCondition,
-          (value) => setState(() => _housingCondition = value),
-          [
-            'Apartment renter (no dedicated parking)',
-            'Apartment renter (dedicated parking)',
-            'Apartment owner (no dedicated parking)',
-            'Apartment owner (dedicated parking)',
-            'House renter (no dedicated parking)',
-            'House renter (dedicated parking)',
-            'House owner (no dedicated parking)',
-            'House owner (dedicated parking)'
-          ],
-        ),
-
-        // Income Slider (1-13)
-        _buildSlider(
-          'Income',
-          _income,
-          (value) => setState(() => _income = value),
-          [
-            '< 1000€',
-            '1000€ - 2000€',
-            '2001€ - 3000€',
-            '3001€ - 4000€',
-            '4001€ - 5000€',
-            '5001€ - 6000€',
-            '6001€ - 7000€',
-            '7001€ - 8000€',
-            '8001€ - 9000€',
-            '9001€ - 10000€',
-            '10001€ - 11000€',
-            '11001€ - 12000€',
-            '> 12000€'
-          ],
-        ),
-
-        // Population Slider (1-5)
-        _buildSlider(
-          'Population',
-          _population,
-          (value) => setState(() => _population = value),
-          [
-            '< 5,000 people',
-            '5,000 - 49,999 people',
-            '50,000 - 249,999 people',
-            '250,000 - 1 million people',
-            '> 1 million people'
-          ],
-        ),
-
-        // Age Slider (1-10)
-        _buildSlider(
-          'Age',
-          _age,
-          (value) => setState(() => _age = value),
-          [
-            '18-24 years',
-            '25-29 years',
-            '30-34 years',
-            '35-39 years',
-            '40-44 years',
-            '45-49 years',
-            '50-54 years',
-            '55-59 years',
-            '60-64 years',
-            '65-75 years'
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSlider(String title, double value, Function(double) onChanged,
-      List<String> labels) {
-    // Convert value to index (0-based) for labels array
-    int labelIndex = (value - 1).round().clamp(0, labels.length - 1);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title and value row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                fontFamily: 'NouvelR',
-                color: Colors.black,
-              ),
-            ),
-            Text(
-              labels[labelIndex],
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                fontFamily: 'NouvelR',
-                color: Color(0xFF535450),
-              ),
-            ),
-          ],
-        ),
-        //const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: const Color(0xFF535450),
-            inactiveTrackColor: const Color(0xFFE1DFE2),
-            thumbColor: const Color(0xFF535450),
-            overlayColor: const Color(0xFF535450).withOpacity(0.2),
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-            trackHeight: 4,
-          ),
-          child: Slider(
-            value: value,
-            min: 1,
-            max: labels.length.toDouble(),
-            divisions: labels.length - 1,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
     );
   }
 

@@ -368,14 +368,15 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
                           // Breathing effect - only show when loading
                           if (_isLoading)
                             BoxShadow(
-                              color: _colorAnimation.value?.withOpacity(0.6) ??
+                              color: _colorAnimation.value
+                                      ?.withValues(alpha: 0.6) ??
                                   Colors.transparent,
                               blurRadius: 30 + (20 * _breathingAnimation.value),
                               spreadRadius:
@@ -411,7 +412,8 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.1),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -971,6 +973,6 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
 
   /// Build tooltip content for persona instance showing its settings
   String _buildPersonaTooltip(PersonaInstance instance) {
-    return '${instance.persona.name}\n${instance.settingsSummary}';
+    return instance.persona.name;
   }
 }

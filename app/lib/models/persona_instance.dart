@@ -80,6 +80,17 @@ class PersonaInstance {
     );
   }
 
+  /// Creates a PersonaInstance with default mid-point settings
+  factory PersonaInstance.defaultFor(PersonaData persona) {
+    return PersonaInstance.fromSettings(
+      persona: persona,
+      housingCondition: 4,
+      income: 7,
+      population: 3,
+      age: 5,
+    );
+  }
+
   /// Returns a human-readable summary of the settings
   String get settingsSummary {
     return 'Housing: ${_getHousingLabel()}\n'

@@ -18,7 +18,6 @@ class FocusSettingsPage extends StatefulWidget {
 }
 
 class _FocusSettingsPageState extends State<FocusSettingsPage> {
-  final TextEditingController _roundsController = TextEditingController();
   final TextEditingController _topicController = TextEditingController();
 
   // Show the first selected persona
@@ -35,7 +34,6 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
 
   @override
   void dispose() {
-    _roundsController.dispose();
     _topicController.dispose();
     super.dispose();
   }
@@ -240,7 +238,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                     borderRadius: BorderRadius.circular(42),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 60,
                         offset: const Offset(0, 0),
                       ),
@@ -263,116 +261,63 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
 
                         const SizedBox(height: 16),
 
-                        Center(
-                          child: const Text(
-                            'Define the conversation topic.',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w400,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Topic input field (centered)
-                        Center(
-                          child: Container(
-                            width: 400,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                  color: const Color(0xFFC4C4C4), width: 1),
-                            ),
-                            child: TextField(
-                              controller: _topicController,
-                              textAlign: TextAlign.center,
-                              maxLines: null, // Allow unlimited lines
-                              minLines: 3, // Start with 3 lines visible
-                              decoration: const InputDecoration(
-                                hintText: 'Enter discussion topic',
-                                hintStyle: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w300,
+                        // Center the topic prompt and input vertically
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Define the conversation topic.',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w400,
                                   fontFamily: 'NouvelR',
-                                  color: Color(0xFFC4C4C4),
+                                  color: Colors.black,
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
                               ),
-                              keyboardType: TextInputType.multiline,
-                              textInputAction: TextInputAction
-                                  .newline, // Allow enter key for new lines
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'NouvelR',
-                                color: Colors.black,
+                              const SizedBox(height: 16),
+                              Container(
+                                width: 400,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                      color: const Color(0xFFC4C4C4), width: 1),
+                                ),
+                                child: TextField(
+                                  controller: _topicController,
+                                  textAlign: TextAlign.center,
+                                  maxLines: null, // Allow unlimited lines
+                                  minLines: 3, // Start with 3 lines visible
+                                  decoration: const InputDecoration(
+                                    hintText: 'Enter discussion topic',
+                                    hintStyle: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w300,
+                                      fontFamily: 'NouvelR',
+                                      color: Color(0xFFC4C4C4),
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 30, vertical: 15),
+                                  ),
+                                  keyboardType: TextInputType.multiline,
+                                  textInputAction: TextInputAction
+                                      .newline, // Allow enter key for new lines
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w400,
+                                    fontFamily: 'NouvelR',
+                                    color: Colors.black,
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
 
                         const SizedBox(height: 24),
-
-                        // "Define the depth of the conversation" text
-                        Center(
-                          child: const Text(
-                            'How many rounds ?',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w400,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Rounds input field (centered)
-                        Center(
-                          child: Container(
-                            width: 200,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                  color: const Color(0xFFC4C4C4), width: 1),
-                            ),
-                            child: TextField(
-                              controller: _roundsController,
-                              textAlign: TextAlign.center,
-                              decoration: const InputDecoration(
-                                hintText: 'Rounds no.',
-                                hintStyle: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w300,
-                                  fontFamily: 'NouvelR',
-                                  color: Color(0xFFC4C4C4),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
-                              ),
-                              keyboardType: TextInputType.number,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'NouvelR',
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const Spacer(),
 
                         // Selected personas and Go button row
                         Row(
@@ -401,7 +346,8 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                         i++)
                                       Tooltip(
                                         message:
-                                            '${widget.selectedInstances[i].persona.name}\n${widget.selectedInstances[i].settingsSummary}',
+                                            widget.selectedInstances[i].persona
+                                                .name,
                                         child: Container(
                                           width:
                                               48, // Increased to accommodate overflow
@@ -487,8 +433,6 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                             GestureDetector(
                               onTap: () {
                                 // Navigate to focus answers page
-                                final rounds =
-                                    int.tryParse(_roundsController.text) ?? 3;
                                 final topic = _topicController.text.isNotEmpty
                                     ? _topicController.text
                                     : 'Battery subscription analysis';
@@ -501,7 +445,7 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
                                       selectedInstances:
                                           widget.selectedInstances,
                                       topic: topic,
-                                      rounds: rounds,
+                                      rounds: 3,
                                     ),
                                   ),
                                 );
