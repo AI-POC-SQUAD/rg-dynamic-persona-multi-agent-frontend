@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/persona_data.dart';
 import '../models/persona_instance.dart';
+import '../services/api_client.dart';
 import '../utils/fade_page_route.dart';
 import 'focus_settings_page.dart';
 
@@ -14,11 +15,44 @@ class FocusPersonaSelectionPage extends StatefulWidget {
 
 class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
   final PageController _pageController = PageController();
+  final ApiClient _apiClient = ApiClient();
+
   int _currentIndex = 0;
-  final List<PersonaData> personas = PersonaData.getPersonas();
+  List<PersonaData> _personas = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   // Selected persona instances for focus group (max 5)
   final List<PersonaInstance> _selectedPersonas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPersonas();
+  }
+
+  Future<void> _loadPersonas() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final personas = await _apiClient.fetchPersonas();
+      if (!mounted) return;
+      setState(() {
+        _personas = personas;
+        _currentIndex = personas.isNotEmpty ? 0 : 0;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+    }
+  }
 
   void _selectPersona(PersonaData persona) {
     setState(() {
@@ -45,6 +79,10 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hasPersonas =
+        !_isLoading && _errorMessage == null && _personas.isNotEmpty;
+    final canNavigate = hasPersonas && _personas.length > 1;
+
     return Scaffold(
       backgroundColor: const Color(0xFFE1DFE2),
       body: Stack(
@@ -115,24 +153,46 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                           ),
                         ],
                       ),
-                      // PageView for personas
-                      PageView.builder(
-                        controller: _pageController,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _currentIndex = index;
-                          });
-                        },
-                        itemCount: personas.length,
-                        itemBuilder: (context, index) {
-                          return Center(
-                            child: _buildPersonaCard(personas[index], index),
-                          );
-                        },
-                      ),
+                      if (_isLoading)
+                        const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      else if (_errorMessage != null)
+                        Center(
+                          child: _buildErrorState(),
+                        )
+                      else if (_personas.isEmpty)
+                        const Center(
+                          child: Text(
+                            'No personas available right now.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      else
+                        PageView.builder(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentIndex = index;
+                            });
+                          },
+                          itemCount: _personas.length,
+                          itemBuilder: (context, index) {
+                            return Center(
+                              child:
+                                  _buildPersonaCard(_personas[index], index),
+                            );
+                          },
+                        ),
 
                       // Left navigation arrow (only show if not on first card)
-                      if (_currentIndex > 0)
+                      if (canNavigate && _currentIndex > 0)
                         Positioned(
                           left: 60,
                           top: MediaQuery.of(context).size.height * 0.4,
@@ -158,13 +218,13 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                         ),
 
                       // Right navigation arrow (only show if not on last card)
-                      if (_currentIndex < personas.length - 1)
+                      if (canNavigate && _currentIndex < _personas.length - 1)
                         Positioned(
                           right: 120,
                           top: MediaQuery.of(context).size.height * 0.4,
                           child: GestureDetector(
                             onTap: () {
-                              if (_currentIndex < personas.length - 1) {
+                              if (_currentIndex < _personas.length - 1) {
                                 _pageController.nextPage(
                                   duration: const Duration(milliseconds: 300),
                                   curve: Curves.easeInOut,
@@ -181,54 +241,55 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                               ),
                             ),
                           ),
-                        ),
+                      ),
 
                       // Fixed carousel indicators positioned under the persona cards
-                      Positioned(
-                        bottom: 120, // Position above the bottom text
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            personas.length,
-                            (index) {
-                              // Specific sizes for each indicator as per Figma design
-                              double size;
-                              if (index == _currentIndex) {
-                                size = 12.0; // Active indicator (largest)
-                              } else if ((index - _currentIndex).abs() == 1) {
-                                size = 8.0; // Adjacent indicators (medium)
-                              } else {
-                                size = 4.0; // Far indicators (smallest)
-                              }
+                      if (hasPersonas)
+                        Positioned(
+                          bottom: 120, // Position above the bottom text
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              _personas.length,
+                              (index) {
+                                double size;
+                                if (index == _currentIndex) {
+                                  size = 12.0; // Active indicator (largest)
+                                } else if ((index - _currentIndex).abs() == 1) {
+                                  size = 8.0; // Adjacent indicators (medium)
+                                } else {
+                                  size = 4.0; // Far indicators (smallest)
+                                }
 
-                              return GestureDetector(
-                                onTap: () {
-                                  _pageController.animateToPage(
-                                    index,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                child: Container(
-                                  margin: EdgeInsets.symmetric(
-                                      horizontal: size == 12.0 ? 8 : 6),
-                                  width: size,
-                                  height: size,
-                                  decoration: BoxDecoration(
-                                    color: index == _currentIndex
-                                        ? Colors.black
-                                        : Colors.black
-                                            .withValues(alpha: 0.3),
-                                    shape: BoxShape.circle,
+                                return GestureDetector(
+                                  onTap: () {
+                                    _pageController.animateToPage(
+                                      index,
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.symmetric(
+                                        horizontal: size == 12.0 ? 8 : 6),
+                                    width: size,
+                                    height: size,
+                                    decoration: BoxDecoration(
+                                      color: index == _currentIndex
+                                          ? Colors.black
+                                          : Colors.black
+                                              .withValues(alpha: 0.3),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -301,222 +362,134 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
     );
   }
 
+  Widget _buildErrorState() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Unable to load personas.',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w300,
+            fontFamily: 'NouvelR',
+            color: Colors.black,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _loadPersonas,
+          child: const Text('Retry'),
+        ),
+      ],
+    );
+  }
+
+  String _initialFor(PersonaData persona) {
+    final trimmed = persona.name.trim();
+    return trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '?';
+  }
+
   Widget _buildPersonaCard(PersonaData persona, int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 64),
-      child: Center(
-        child: SizedBox(
-          width: 650 * 1.3, // Fixed width for better proportions
-          height: 334 * 1.5,
-          child: Stack(
-            children: [
-              // Background image (full width)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(42),
-                    image: DecorationImage(
-                      image: AssetImage(persona.backgroundAsset),
-                      //fit: BoxFit.cover,
-                      alignment: AlignmentDirectional(5.5, -0.5),
-                      //fit: BoxFit.cover,
-                    ),
+    final bool canSelectMore = _selectedPersonas.length < 5;
+    final String initial = _initialFor(persona);
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Card(
+          elevation: 16,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Persona ${index + 1}/${_personas.length}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w200,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
                   ),
                 ),
-              ),
-
-              // Overlaid persona card (left side)
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 500, // Fixed width for card
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(42),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 60,
-                        offset: const Offset(0, 0),
+                const SizedBox(height: 16),
+                Text(
+                  persona.name,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  persona.description.isNotEmpty
+                      ? persona.description
+                      : 'No description provided.',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w300,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
+                    height: 1.5,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.black.withValues(alpha: 0.1),
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(36),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Persona counter
-                        Text(
-                          'Persona ${index + 1}/5',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w200,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                          ),
-                        ),
-
-                        //const SizedBox(height: 16),
-
-                        // Persona name
-                        Text(
-                          persona.name,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w400,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                            height: 1.0,
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Persona description
-                        Expanded(
-                          child: Text(
-                            persona.description,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w300,
-                              fontFamily: 'NouvelR',
-                              color: Colors.black,
-                              height: 1.5,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Bottom row with persona selection and Go button
-                        Row(
-                          children: [
-                            // Persona selection indicator
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(21),
-                                border: Border.all(
-                                    color: const Color(0xFFC4C4C4), width: 0.5),
-                              ),
-                              child: Stack(
-                                children: [
-                                  // Chat icon
-                                  const Positioned(
-                                    left: 6,
-                                    top: 6,
-                                    child: Icon(
-                                      Icons.chat_bubble_outline,
-                                      size: 15,
-                                      color: Color(0xFF535450),
-                                    ),
-                                  ),
-                                  // Masked persona sphere
-                                  Positioned(
-                                    left: 1,
-                                    top: 1,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(13),
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image:
-                                                AssetImage(persona.sphereAsset),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(width: 8),
-
-                            // Persona name text
-                            Expanded(
-                              child: Text(
-                                persona.name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w200,
-                                  fontFamily: 'NouvelR',
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 16),
-
-                            // Select persona button (always clickable)
-                            GestureDetector(
-                              onTap: _selectedPersonas.length < 5
-                                  ? () => _selectPersona(persona)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: _selectedPersonas.length < 5
-                                      ? Colors.black
-                                      : const Color(0xFFC4C4C4),
-                                  borderRadius: BorderRadius.circular(32),
-                                ),
-                                child: Text(
-                                  _selectedPersonas.length < 5
-                                      ? 'Select'
-                                      : 'Max 5',
-                                  style: const TextStyle(
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.w200,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
-                  ),
-                ),
-              ),
-
-              // Sphere icon in bottom right corner of the image
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(21),
-                    border:
-                        Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      persona.sphereAsset,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        persona.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w300,
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                        ),
+                      ),
                     ),
-                  ),
+                    ElevatedButton(
+                      onPressed:
+                          canSelectMore ? () => _selectPersona(persona) : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: Text(canSelectMore ? 'Select' : 'Max 5'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -576,13 +549,15 @@ class _FocusPersonaSelectionPageState extends State<FocusPersonaSelectionPage> {
                             children: [
                               // Persona sphere background (if selected)
                               if (hasPersona)
-                                Positioned.fill(
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      _selectedPersonas[index]
-                                          .persona
-                                          .sphereAsset,
-                                      fit: BoxFit.cover,
+                                Center(
+                                  child: Text(
+                                    _initialFor(
+                                        _selectedPersonas[index].persona),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'NouvelR',
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),

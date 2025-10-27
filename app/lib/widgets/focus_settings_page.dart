@@ -29,7 +29,11 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
     // Use the first persona from the selected personas or default to first available persona
     _displayPersona = widget.selectedPersonas.isNotEmpty
         ? widget.selectedPersonas[0]
-        : PersonaData.getPersonas()[0];
+        : const PersonaData(
+            id: 'placeholder',
+            name: 'No persona selected',
+            description: 'Please add personas to start a discussion.',
+          );
   }
 
   @override
@@ -205,306 +209,271 @@ class _FocusSettingsPageState extends State<FocusSettingsPage> {
   }
 
   Widget _buildPersonaCard(PersonaData persona) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 64),
-      child: Center(
-        child: SizedBox(
-          width: 650 * 1.3, // Fixed width for better proportions
-          height: 334 * 1.5,
-          child: Stack(
-            children: [
-              // Background image (full width)
-              Positioned.fill(
-                child: Container(
+    final String initial = _initialFor(persona);
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Card(
+          elevation: 16,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(36),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    size: 24,
+                    color: Color(0xFF535450),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.black.withValues(alpha: 0.1),
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'NouvelR',
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            persona.name,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            persona.description,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w300,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black87,
+                              height: 1.4,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Define the conversation topic.',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(42),
-                    image: DecorationImage(
-                      image: AssetImage(persona.backgroundAsset),
-                      alignment: AlignmentDirectional(5.5, -0.5),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border:
+                        Border.all(color: const Color(0xFFC4C4C4), width: 1),
+                  ),
+                  child: TextField(
+                    controller: _topicController,
+                    textAlign: TextAlign.center,
+                    maxLines: null,
+                    minLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter discussion topic',
+                      hintStyle: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w300,
+                        fontFamily: 'NouvelR',
+                        color: Color(0xFFC4C4C4),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    ),
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400,
+                      fontFamily: 'NouvelR',
+                      color: Colors.black,
                     ),
                   ),
                 ),
-              ),
-
-              // Overlaid persona card (left side)
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 500, // Fixed width for card
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(42),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 60,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(36),
-                    child: Column(
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Back arrow
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            size: 24,
-                            color: Color(0xFF535450),
+                        const Text(
+                          'Selected personas:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
                           ),
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // Center the topic prompt and input vertically
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Define the conversation topic.',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w400,
-                                  fontFamily: 'NouvelR',
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                width: 400,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(
-                                      color: const Color(0xFFC4C4C4), width: 1),
-                                ),
-                                child: TextField(
-                                  controller: _topicController,
-                                  textAlign: TextAlign.center,
-                                  maxLines: null, // Allow unlimited lines
-                                  minLines: 3, // Start with 3 lines visible
-                                  decoration: const InputDecoration(
-                                    hintText: 'Enter discussion topic',
-                                    hintStyle: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w300,
-                                      fontFamily: 'NouvelR',
-                                      color: Color(0xFFC4C4C4),
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 30, vertical: 15),
-                                  ),
-                                  keyboardType: TextInputType.multiline,
-                                  textInputAction: TextInputAction
-                                      .newline, // Allow enter key for new lines
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w400,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Selected personas and Go button row
+                        const SizedBox(height: 8),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // Selected personas section on the left
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Selected personas:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                // Show selected personas with sphere icons
-                                Row(
-                                  children: [
-                                    for (int i = 0;
-                                        i < widget.selectedInstances.length;
-                                        i++)
-                                      Tooltip(
-                                        message:
-                                            widget.selectedInstances[i].persona
-                                                .name,
+                            for (int i = 0;
+                                i < widget.selectedInstances.length;
+                                i++)
+                              Tooltip(
+                                message:
+                                    widget.selectedInstances[i].persona.name,
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Positioned(
+                                        top: 3,
+                                        left: 3,
                                         child: Container(
-                                          width:
-                                              48, // Increased to accommodate overflow
-                                          height:
-                                              48, // Increased to accommodate overflow
-                                          margin:
-                                              const EdgeInsets.only(right: 8),
-                                          child: Stack(
-                                            clipBehavior:
-                                                Clip.none, // Allow overflow
-                                            children: [
-                                              // Main circle
-                                              Positioned(
-                                                top: 3,
-                                                left: 3,
-                                                child: Container(
-                                                  width: 42,
-                                                  height: 42,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                        color: const Color(
-                                                            0xFF535450),
-                                                        width: 1),
-                                                  ),
-                                                  child: Stack(
-                                                    children: [
-                                                      // Persona sphere
-                                                      Positioned.fill(
-                                                        child: ClipOval(
-                                                          child: Image.asset(
-                                                            widget
-                                                                .selectedInstances[
-                                                                    i]
-                                                                .persona
-                                                                .sphereAsset,
-                                                            fit: BoxFit.cover,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                                          width: 42,
+                                          height: 42,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF535450),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              _initialFor(widget
+                                                  .selectedInstances[i]
+                                                  .persona),
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                                fontFamily: 'NouvelR',
+                                                color: Colors.black,
                                               ),
-                                              // Number overlay (outside main circle)
-                                              Positioned(
-                                                top: 0,
-                                                right: 0,
-                                                child: Container(
-                                                  width: 16,
-                                                  height: 16,
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        const Color(0xFF535450),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8),
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      '${i + 1}',
-                                                      style: const TextStyle(
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        fontFamily: 'NouvelR',
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            // Go button on the right
-                            GestureDetector(
-                              onTap: () {
-                                // Navigate to focus answers page
-                                final topic = _topicController.text.isNotEmpty
-                                    ? _topicController.text
-                                    : 'Battery subscription analysis';
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => FocusAnswersPage(
-                                      selectedPersonas: widget.selectedPersonas,
-                                      selectedInstances:
-                                          widget.selectedInstances,
-                                      topic: topic,
-                                      rounds: 3,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(32),
-                                ),
-                                child: const Text(
-                                  'Go',
-                                  style: TextStyle(
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.w200,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.white,
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: Container(
+                                          width: 16,
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF535450),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              '${i + 1}',
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w400,
+                                                fontFamily: 'NouvelR',
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-
-              // Sphere icon in bottom right corner of the image
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(21),
-                    border:
-                        Border.all(color: const Color(0xFFC4C4C4), width: 0.5),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      persona.sphereAsset,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
+                    ElevatedButton(
+                      onPressed: _startDiscussion,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                      ),
+                      child: const Text(
+                        'Go',
+                        style: TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w200,
+                          fontFamily: 'NouvelR',
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  void _startDiscussion() {
+    final topic = _topicController.text.isNotEmpty
+        ? _topicController.text
+        : 'Battery subscription analysis';
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FocusAnswersPage(
+          selectedPersonas: widget.selectedPersonas,
+          selectedInstances: widget.selectedInstances,
+          topic: topic,
+          rounds: 3,
+        ),
+      ),
+    );
+  }
+
+  String _initialFor(PersonaData persona) {
+    final trimmed = persona.name.trim();
+    return trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '?';
   }
 
   Widget _buildSettingsSection() {

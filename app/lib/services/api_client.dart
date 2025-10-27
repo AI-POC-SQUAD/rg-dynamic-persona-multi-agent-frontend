@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/persona_data.dart';
+
 class ApiClient {
   static const Duration _httpTimeout = Duration(seconds: 300);
   Map<String, dynamic>? _runtimeConfig;
@@ -62,226 +64,43 @@ class ApiClient {
     return config?['IAP_MODE'] == true;
   }
 
-  /// Send a chat message to the backend with conversation context and profile
-  Future<Map<String, dynamic>> sendChatMessage(
-    String message,
-    String userId, {
-    String? conversationId,
-    List<Map<String, dynamic>>? conversationHistory,
-    int maxHistoryMessages = 10,
-    Map<String, dynamic>? profile,
-  }) async {
+  /// Fetch personas from backend
+  Future<List<PersonaData>> fetchPersonas() async {
     try {
-      final url = '${_getApiUrl}/chat';
-
+      final url = '${_getApiUrl}/personas';
       final headers = <String, String>{
         'Content-Type': 'application/json',
       };
 
-      // Add authentication based on configuration
       final config = getRuntimeConfig();
       final authMode = config?['AUTH_MODE'] ?? 'none';
       final bearerToken = config?['BEARER_TOKEN'];
-      final authToken = config?['AUTH_TOKEN']; // Legacy support
+      final authToken = config?['AUTH_TOKEN'];
       final iapMode = config?['IAP_MODE'] == true;
 
       if (authMode == 'bearer' &&
           bearerToken != null &&
           bearerToken.isNotEmpty) {
-        // Use bearer token authentication (preferred for Cloud Run IAM)
         headers['Authorization'] = 'Bearer $bearerToken';
       } else if (authToken != null && authToken.isNotEmpty) {
-        // Legacy AUTH_TOKEN support
         headers['Authorization'] = 'Bearer $authToken';
       } else if (iapMode) {
-        // For IAP mode, we rely on cookies and don't add Authorization header
-        // The browser will automatically include IAP session cookies
-      } else {
-        // No authentication configured
-        print('Warning: No authentication configured for API calls');
+        // For IAP mode we let browser cookies handle auth, so no header needed
       }
 
-      // Prepare conversation history for backend context (recent messages only)
-      final limitedHistory =
-          conversationHistory != null && conversationHistory.isNotEmpty
-              ? conversationHistory.take(maxHistoryMessages).toList()
-              : <Map<String, dynamic>>[];
-
-      // Build request payload with conversation context and profile
-      final requestPayload = <String, dynamic>{
-        'query': message,
-        'user_id': userId,
-      };
-
-      // Add profile information if available
-      if (profile != null) {
-        requestPayload['profile'] = profile;
-      }
-
-      // Add conversation context if available
-      if (conversationId != null) {
-        requestPayload['conversation_id'] = conversationId;
-      }
-
-      if (limitedHistory.isNotEmpty) {
-        requestPayload['context'] = limitedHistory;
-      }
-
-      final requestBody = jsonEncode(requestPayload);
-
-      // Debug logging to verify the payload
-      print('🚀 Sending chat request to: $url');
-      print('📝 Query: $message');
-      print('👤 User ID: $userId');
-      print(
-          '💬 Conversation ID: ${requestPayload['conversation_id'] ?? 'None'}');
-      print('📚 Context messages: ${limitedHistory.length}');
-      if (profile != null) {
-        print(
-            '👥 Profile: ${profile['name']} (housing: ${profile['housing_condition']}, income: ${profile['income']}, age: ${profile['age']}, population: ${profile['population']})');
-      }
-      if (limitedHistory.isNotEmpty) {
-        final lastContent = limitedHistory.last['content']?.toString() ?? '';
-        final preview = lastContent.length > 50
-            ? '${lastContent.substring(0, 50)}...'
-            : lastContent;
-        print('📖 Latest context: $preview');
-      }
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: requestBody,
-      ).timeout(_httpTimeout);
+      final response = await http
+          .get(Uri.parse(url), headers: headers)
+          .timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        return responseData;
-      } else if (response.statusCode == 401) {
-        throw Exception(
-            'Authentication failed. Please check your token or sign in.');
-      } else if (response.statusCode == 403) {
-        throw Exception('Access forbidden. Check your permissions.');
-      } else {
-        throw Exception(
-            'Server error: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      if (e.toString().contains('XMLHttpRequest')) {
-        // Network/CORS error
-        throw Exception(
-            'Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
-      }
-      rethrow;
-    }
-  }
-
-  /// Convert conversation messages to backend-compatible format
-  static List<Map<String, dynamic>> formatConversationHistory(
-      List<dynamic> messages) {
-    return messages
-        .map((msg) {
-          // Ensure we have the required fields with safe type casting
-          final text = msg.text?.toString() ?? '';
-          final isUser = msg.isUser == true;
-          final timestamp = msg.timestamp?.toIso8601String() ??
-              DateTime.now().toIso8601String();
-
-          return {
-            'role': isUser ? 'user' : 'assistant',
-            'content': text,
-            'timestamp': timestamp,
-          };
-        })
-        .where((msg) => (msg['content'] as String).isNotEmpty)
-        .toList();
-  }
-
-  /// Health check endpoint
-  Future<bool> checkHealth() async {
-    try {
-      final response = await http.get(Uri.parse('/health')).timeout(_httpTimeout);
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /// Get user profile (when using IAP)
-  Future<Map<String, dynamic>?> getUserProfile() async {
-    if (!isIapMode) return null;
-
-    try {
-      final response = await http.get(
-        Uri.parse('${_getApiUrl}/profile'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(_httpTimeout);
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-      return null;
-    } catch (e) {
-      print('Error fetching user profile: $e');
-      return null;
-    }
-  }
-
-  /// Load a persona for the user
-  Future<Map<String, dynamic>> loadPersona(
-      String userId, String personaName) async {
-    try {
-      final url = '${_getApiUrl}/personas/load';
-
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-      };
-
-      // Add authentication based on configuration
-      final config = getRuntimeConfig();
-      final authMode = config?['AUTH_MODE'] ?? 'none';
-      final bearerToken = config?['BEARER_TOKEN'];
-      final authToken = config?['AUTH_TOKEN']; // Legacy support
-      final iapMode = config?['IAP_MODE'] == true;
-      if (authMode == 'bearer' &&
-          bearerToken != null &&
-          bearerToken.isNotEmpty) {
-        // Use bearer token authentication (preferred for Cloud Run IAM)
-        headers['Authorization'] = 'Bearer $bearerToken';
-        //print('Using BEARER_TOKEN for authentication : $bearerToken');
-      } else if (authToken != null && authToken.isNotEmpty) {
-        // Legacy AUTH_TOKEN support
-        headers['Authorization'] = 'Bearer $authToken';
-        print('Using AUTH_TOKEN for authentication');
-      } else if (iapMode) {
-        // For IAP mode, we rely on cookies and don't add Authorization header
-        // The browser will automatically include IAP session cookies
-        print('Using IAP mode for authentication');
-      }
-
-      // Build request payload
-      final requestPayload = <String, dynamic>{
-        'user_id': userId,
-        'persona_name': personaName,
-      };
-
-      final requestBody = jsonEncode(requestPayload);
-
-      // Debug logging
-      print('URL: $url');
-      print('Headers: $headers');
-      print('Request Body: $requestBody');
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: requestBody,
-      ).timeout(_httpTimeout);
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        print('✅ Persona loaded successfully');
-        return responseData;
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          return data
+              .whereType<Map<String, dynamic>>()
+              .map(PersonaData.fromJson)
+              .toList();
+        }
+        throw Exception('Unexpected personas payload');
       } else if (response.statusCode == 401) {
         throw Exception(
             'Authentication failed. Please check your token or sign in.');
@@ -294,11 +113,9 @@ class ApiClient {
     } catch (e) {
       if (e.toString().contains('XMLHttpRequest') ||
           e.toString().contains('Network error')) {
-        // Network/CORS error
         throw Exception(
             'Network error. Check your connection and backend URL.\nCORS might need to be configured on the backend.');
       }
-      print('❌ Error loading persona: $e');
       rethrow;
     }
   }

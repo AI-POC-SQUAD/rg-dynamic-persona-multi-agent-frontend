@@ -82,6 +82,11 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
     super.dispose();
   }
 
+  String _initialFor(PersonaData persona) {
+    final trimmed = persona.name.trim();
+    return trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '?';
+  }
+
   /// Start the focus group discussion via API
   Future<void> _startFocusGroup() async {
     try {
@@ -447,21 +452,18 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                                       const Color(0xFF535450),
                                                   width: 1),
                                             ),
-                                            child: Stack(
-                                              children: [
-                                                // Persona sphere
-                                                Positioned.fill(
-                                                  child: ClipOval(
-                                                    child: Image.asset(
-                                                      widget
-                                                          .selectedInstances[i]
-                                                          .persona
-                                                          .sphereAsset,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
+                                            child: Center(
+                                              child: Text(
+                                                _initialFor(widget
+                                                    .selectedInstances[i]
+                                                    .persona),
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily: 'NouvelR',
+                                                  color: Colors.black,
                                                 ),
-                                              ],
+                                              ),
                                             ),
                                           ),
                                         ),
