@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_mindmap/flutter_mindmap.dart';
 import '../models/persona_data.dart';
 import '../models/persona_instance.dart';
-import '../services/api_client.dart';
+import '../utils/dummy_mindmap_data.dart';
 
 class FocusAnswersPage extends StatefulWidget {
   final List<PersonaData> selectedPersonas;
@@ -25,13 +25,11 @@ class FocusAnswersPage extends StatefulWidget {
 
 class _FocusAnswersPageState extends State<FocusAnswersPage>
     with TickerProviderStateMixin {
-  bool _showRoundSteps = false; // Toggle between Result and Round Steps
+  int _currentTab = 0; // 0: Result, 1: Round Steps, 2: Summary
   String _analysisText = '';
   List<Map<String, dynamic>> _discussionRounds = [];
   bool _isLoading = true;
   String? _error;
-  final ApiClient _apiClient = ApiClient();
-  final Uuid _uuid = Uuid();
 
   // Breathing animation controller
   late AnimationController _breathingController;
@@ -87,7 +85,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
     return trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '?';
   }
 
-  /// Start the focus group discussion via API
+  /// Start the focus group discussion with mock data (no backend)
   Future<void> _startFocusGroup() async {
     try {
       setState(() {
@@ -98,68 +96,116 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       // Start breathing animation
       _breathingController.repeat();
 
-      // Generate user ID for this session
-      final userId = _uuid.v4();
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 2));
 
-      // Build profiles from selected persona instances
-      final profiles = widget.selectedInstances.map((instance) {
-        return ApiClient.buildFocusGroupProfile(
-          instance.persona.backendPersonaName,
-          instance.housingCondition.round(),
-          instance.income.round(),
-          instance.age.round(),
-          instance.population.round(),
-          gender: 'male', // Default gender
-          threshold: 20.0, // Keep threshold at 25.0 as requested
-        );
-      }).toList();
+      // Use mock data instead of API call
+      final mockData = _getMockFocusGroupData();
 
-      print('🎯 Starting focus group with profiles:');
-      for (final profile in profiles) {
-        print(
-            '  - ${profile['name']}: housing=${profile['housing_condition']}, income=${profile['income']}, age=${profile['age']}, population=${profile['population']}');
-      }
+      setState(() {
+        _analysisText = mockData['executive_summary'];
+        _discussionRounds =
+            List<Map<String, dynamic>>.from(mockData['discussion'] ?? []);
+        _isLoading = false;
+      });
 
-      // Call the API
-      final response = await _apiClient.startFocusGroup(
-        userId,
-        widget.topic,
-        profiles,
-        widget.rounds,
-        domain: "Electric Vehicles",
-        enableIterativeDiscussion: true,
-        timeoutSeconds: 300,
-      );
-
-      // Process the response
-      if (response['status'] == 'success') {
-        setState(() {
-          _analysisText =
-              response['executive_summary'] ?? _getMockAnalysisText();
-          _discussionRounds =
-              List<Map<String, dynamic>>.from(response['discussion'] ?? []);
-          _isLoading = false;
-        });
-
-        // Stop breathing animation
-        _breathingController.stop();
-        print(
-            '✅ Focus group completed with ${_discussionRounds.length} discussion turns');
-      } else {
-        throw Exception('Focus group failed: ${response['status']}');
-      }
+      // Stop breathing animation
+      _breathingController.stop();
+      print(
+          '✅ Focus group completed with ${_discussionRounds.length} discussion turns (MOCK DATA)');
     } catch (e) {
-      print('❌ Error starting focus group: $e');
+      print('❌ Error in focus group: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
-        // Fall back to mock data
+        // Fall back to mock analysis text
         _analysisText = _getMockAnalysisText();
       });
 
       // Stop breathing animation
       _breathingController.stop();
     }
+  }
+
+  /// Get mock focus group data including discussion rounds
+  Map<String, dynamic> _getMockFocusGroupData() {
+    return {
+      'status': 'success',
+      'executive_summary': _getMockAnalysisText(),
+      'discussion': [
+        {
+          'turn': 1,
+          'speaker': 'Status-driven commuter',
+          'message':
+              'I find the battery subscription model quite appealing. Being able to reduce my initial investment while maintaining flexibility is exactly what I need for my lifestyle.',
+          'confidence': 87.5,
+          'key_points': [
+            'Lower entry cost is attractive',
+            'Flexibility to upgrade batteries',
+            'Suits high-income professionals'
+          ],
+          'concerns': ['Long-term subscription costs', 'Contract lock-in']
+        },
+        {
+          'turn': 2,
+          'speaker': 'Convenience buyer',
+          'message':
+              'The concept makes sense, but I\'m concerned about the added complexity. I just want a car that works without worrying about battery management.',
+          'confidence': 62.3,
+          'key_points': [
+            'Simplicity is important',
+            'Battery swapping could be complex',
+            'Prefer straightforward purchase'
+          ],
+          'concerns': [
+            'Administrative burden',
+            'Unclear how battery replacement works'
+          ]
+        },
+        {
+          'turn': 3,
+          'speaker': 'Price-conscious driver',
+          'message':
+              'Even with subscription, the upfront cost is still high. I\'d need much stronger savings to consider this option.',
+          'confidence': 45.8,
+          'key_points': [
+            'Total cost of ownership is critical',
+            'Hidden fees concern',
+            'Need transparent pricing'
+          ],
+          'concerns': ['Overall affordability', 'Risk of price increases']
+        },
+        {
+          'turn': 4,
+          'speaker': 'Environment evangelist',
+          'message':
+              'I like how this model could extend battery lifecycle and improve recycling. That aligns with my environmental values.',
+          'confidence': 71.2,
+          'key_points': [
+            'Supports sustainability',
+            'Better battery lifecycle management',
+            'Circular economy benefits'
+          ],
+          'concerns': [
+            'Need proof of actual environmental benefits',
+            'Recycling process unclear'
+          ]
+        },
+        {
+          'turn': 5,
+          'speaker': 'Moderator synthesis',
+          'message':
+              'Key takeaway: Battery subscription works best for status-driven professionals (26% interest) but faces resistance from price-conscious consumers (11% interest). Success depends on transparent pricing and simplified logistics.',
+          'confidence': 78.9,
+          'key_points': [
+            'Clear market segmentation identified',
+            'Multiple concerns can be addressed with better communication',
+            'Logistics and pricing are critical success factors'
+          ],
+          'concerns': []
+        }
+      ]
+    };
   }
 
   String _getMockAnalysisText() {
@@ -274,7 +320,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                   ),
                 ),
 
-                // Toggle buttons for Result / Round Steps
+                // Toggle buttons for Result / Round Steps / Summary
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
@@ -282,7 +328,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                     children: [
                       // Result tab
                       GestureDetector(
-                        onTap: () => setState(() => _showRoundSteps = false),
+                        onTap: () => setState(() => _currentTab = 0),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -291,7 +337,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                               Icon(
                                 Icons.bar_chart,
                                 size: 24,
-                                color: !_showRoundSteps
+                                color: _currentTab == 0
                                     ? Colors.black
                                     : const Color(0xFFC4C4C4),
                               ),
@@ -301,7 +347,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontFamily: 'NouvelR',
-                                  color: !_showRoundSteps
+                                  color: _currentTab == 0
                                       ? Colors.black
                                       : const Color(0xFFC4C4C4),
                                 ),
@@ -313,7 +359,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                       const SizedBox(width: 32),
                       // Round Steps tab
                       GestureDetector(
-                        onTap: () => setState(() => _showRoundSteps = true),
+                        onTap: () => setState(() => _currentTab = 1),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -322,7 +368,7 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                               Icon(
                                 Icons.chat_bubble_outline,
                                 size: 24,
-                                color: _showRoundSteps
+                                color: _currentTab == 1
                                     ? Colors.black
                                     : const Color(0xFFC4C4C4),
                               ),
@@ -332,7 +378,38 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontFamily: 'NouvelR',
-                                  color: _showRoundSteps
+                                  color: _currentTab == 1
+                                      ? Colors.black
+                                      : const Color(0xFFC4C4C4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 32),
+                      // Summary tab (new)
+                      GestureDetector(
+                        onTap: () => setState(() => _currentTab = 2),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.account_tree_outlined,
+                                size: 24,
+                                color: _currentTab == 2
+                                    ? Colors.black
+                                    : const Color(0xFFC4C4C4),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Summary',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontFamily: 'NouvelR',
+                                  color: _currentTab == 2
                                       ? Colors.black
                                       : const Color(0xFFC4C4C4),
                                 ),
@@ -417,8 +494,8 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.1),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.1),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -669,7 +746,17 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
       );
     }
 
-    return _showRoundSteps ? _buildRoundStepsView() : _buildResultView();
+    // Switch between tabs
+    switch (_currentTab) {
+      case 0:
+        return _buildResultView();
+      case 1:
+        return _buildRoundStepsView();
+      case 2:
+        return _buildSummaryView();
+      default:
+        return _buildResultView();
+    }
   }
 
   Widget _buildResultView() {
@@ -976,5 +1063,91 @@ This initial finding is already counter-intuitive: the most price-sensitive segm
   /// Build tooltip content for persona instance showing its settings
   String _buildPersonaTooltip(PersonaInstance instance) {
     return instance.persona.name;
+  }
+
+  /// Build the summary view with mind map visualization
+  Widget _buildSummaryView() {
+    // Generate persona names for the dummy data
+    final personaNames = widget.selectedInstances
+        .map((instance) => instance.persona.name)
+        .toList();
+
+    // Get dummy JSON data for the mind map
+    // TODO: Replace this with actual backend response
+    final mindMapData = DummyMindMapData.getFocusGroupSummary(
+      widget.topic,
+      personaNames,
+    );
+
+    return Column(
+      children: [
+        // Header with instructions
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            border: Border(
+              bottom: BorderSide(
+                color: const Color(0xFFE0E0E0),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.account_tree_outlined,
+                color: Color(0xFF535450),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Interactive Mind Map Summary - Pan to move, pinch to zoom',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: 'NouvelR',
+                    color: Color(0xFF535450),
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFBF046B).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'DEMO MODE - Backend integration pending',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'NouvelR',
+                    color: Color(0xFFBF046B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Mind map widget - centered view
+        Expanded(
+          child: Center(
+            child: SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: MindMapWidget(
+                jsonData: mindMapData,
+                useTreeLayout: true, // Use tree layout
+                backgroundColor: const Color(0xFFE1DFE2),
+                animationDuration: const Duration(seconds: 2),
+                allowNodeOverlap: false,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
