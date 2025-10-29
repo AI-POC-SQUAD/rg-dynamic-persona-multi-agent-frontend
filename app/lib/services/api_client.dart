@@ -16,8 +16,7 @@ class ApiClient {
       // Load configuration from .env file instead of JavaScript
       _runtimeConfig = {
         'APP_PUBLIC_PATH': dotenv.env['APP_PUBLIC_PATH'] ?? '/',
-        'BACKEND_BASE_URL':
-            dotenv.env['BACKEND_BASE_URL'] ??
+        'BACKEND_BASE_URL': dotenv.env['BACKEND_BASE_URL'] ??
             'https://rg-dynamic-persona-auth-proxy-1036279278510.europe-west9.run.app',
         'IAP_MODE': dotenv.env['IAP_MODE']?.toLowerCase() == 'true',
         'IAP_AUDIENCE': dotenv.env['IAP_AUDIENCE'] ?? '',
