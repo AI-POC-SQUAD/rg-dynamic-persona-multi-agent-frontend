@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'widgets/focus_persona_selection_page.dart';
+import 'widgets/discussion_selection_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class DynamicPersonaApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const SelectionArea(
-        child: FocusPersonaSelectionPage(),
+        child: DiscussionSelectionPage(),
       ),
       debugShowCheckedModeBanner: false,
     );
