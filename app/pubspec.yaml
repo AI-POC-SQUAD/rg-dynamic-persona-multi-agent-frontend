@@ -19,7 +19,7 @@ dependencies:
   flutter_mindmap:
     git:
       url: https://github.com/FrenchPOC/flutter_mindmap.git
-      ref: main
+      ref: develop
 
 dev_dependencies:
   flutter_test:

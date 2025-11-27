@@ -299,6 +299,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
           'id': node.id,
           'label': node.label.replaceAll('\$topic', _discussionDetail!.title),
           'color': node.color,
+          if (node.tooltip != null) 'tooltip': node.tooltip,
         };
       }).toList(),
       'edges': _discussionDetail!.mindmap.edges.map((edge) {
@@ -360,6 +361,15 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
               animationDuration: const Duration(seconds: 2),
               allowNodeOverlap: false,
               expandAllNodesByDefault: false,
+              tooltipBackgroundColor: const Color(0xFF535450).withOpacity(0.9),
+              tooltipTextColor: Colors.white,
+              tooltipTextSize: 14.0,
+              tooltipBorderRadius: 10.0,
+              tooltipPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+              tooltipMaxWidth: 280.0,
             ),
           ),
         ],

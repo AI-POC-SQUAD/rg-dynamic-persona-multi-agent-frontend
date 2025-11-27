@@ -26,11 +26,13 @@ class MindmapNode {
   final String id;
   final String label;
   final String color;
+  final String? tooltip;
 
   const MindmapNode({
     required this.id,
     required this.label,
     required this.color,
+    this.tooltip,
   });
 
   factory MindmapNode.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class MindmapNode {
       id: json['id'] as String,
       label: json['label'] as String,
       color: json['color'] as String,
+      tooltip: json['tooltip'] as String?,
     );
   }
 
@@ -46,6 +49,7 @@ class MindmapNode {
       'id': id,
       'label': label,
       'color': color,
+      if (tooltip != null) 'tooltip': tooltip,
     };
   }
 }
