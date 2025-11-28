@@ -87,7 +87,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             const Text(
               'Could not connect to ADK Server',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 29,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'NouvelR',
                 color: Colors.black,
@@ -98,7 +98,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             Text(
               _errorMessage ?? 'Unknown error',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 17,
                 fontWeight: FontWeight.w300,
                 fontFamily: 'NouvelR',
                 color: Colors.black54,
@@ -125,16 +125,16 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   Widget _buildTopicInputCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
-      padding: const EdgeInsets.all(48),
+      width: 500,
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -143,35 +143,35 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
         children: [
           const Icon(
             Icons.explore_outlined,
-            size: 64,
+            size: 48,
             color: Color(0xFFBF046B),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           const Text(
             'Explore Knowledge Base',
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 29,
               fontWeight: FontWeight.w600,
               fontFamily: 'NouvelR',
               color: Colors.black,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           const Text(
             'Enter a topic or question to explore the corpus',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: FontWeight.w300,
               fontFamily: 'NouvelR',
               color: Colors.black54,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           // Topic input field
-          Container(
-            constraints: const BoxConstraints(maxWidth: 600),
+          SizedBox(
+            width: 400,
             child: TextField(
               controller: _topicController,
               focusNode: _focusNode,
@@ -197,35 +197,28 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                   ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 20,
-                ),
-                suffixIcon: IconButton(
-                  onPressed: _startExploration,
-                  icon: const Icon(
-                    Icons.send_rounded,
-                    color: Color(0xFFBF046B),
-                  ),
+                  horizontal: 20,
+                  vertical: 16,
                 ),
               ),
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 17,
                 fontFamily: 'NouvelR',
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           // Start exploration button
           GestureDetector(
             onTap: _startExploration,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 40,
-                vertical: 16,
+                horizontal: 32,
+                vertical: 14,
               ),
               decoration: BoxDecoration(
                 color: Colors.black,
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(25),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
@@ -233,23 +226,23 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                   Text(
                     'Start Exploration',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 19,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'NouvelR',
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: 10),
                   Icon(
                     Icons.arrow_forward,
                     color: Colors.white,
-                    size: 20,
+                    size: 18,
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           // Session status
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -270,7 +263,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                     ? 'Session active: ${_sessionId!.substring(0, 8)}...'
                     : 'Connecting to ADK server...',
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   fontFamily: 'NouvelR',
                   color: Colors.black54,
                 ),
@@ -303,7 +296,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                       Text(
                         'CORPUS',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 38,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'NouvelR',
                           color: Colors.black,
@@ -313,7 +306,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                       Text(
                         'EXPLORER',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 38,
                           fontWeight: FontWeight.w300,
                           fontFamily: 'NouvelR',
                           color: Colors.black,
@@ -357,7 +350,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                           Text(
                             'Connecting to ADK server...',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 22,
                               fontFamily: 'NouvelR',
                               color: Colors.black54,
                             ),

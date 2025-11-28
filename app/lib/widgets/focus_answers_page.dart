@@ -317,7 +317,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             const Text(
               'Could not complete exploration',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 29,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'NouvelR',
                 color: Colors.black,
@@ -328,7 +328,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             Text(
               _error ?? 'Unknown error',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 17,
                 fontWeight: FontWeight.w300,
                 fontFamily: 'NouvelR',
                 color: Colors.black54,
@@ -436,7 +436,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                   title: const Text(
                     '💭 Thinking...',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'NouvelR',
                       color: Color(0xFF9C27B0),
@@ -447,7 +447,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                     SelectableText(
                       content,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 16,
                         fontFamily: 'NouvelR',
                         color: Colors.black87,
                         height: 1.5,
@@ -505,7 +505,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'NouvelR',
                     color: color,
@@ -515,7 +515,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontFamily: 'NouvelR',
                     color: color.withOpacity(0.8),
                   ),
@@ -569,7 +569,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 selectable: true,
                 styleSheet: MarkdownStyleSheet(
                   p: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 17,
                     fontFamily: 'NouvelR',
                     color: Colors.black87,
                     height: 1.6,
@@ -585,19 +585,19 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                     color: Colors.black87,
                   ),
                   h1: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 24,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'NouvelR',
                     color: Colors.black,
                   ),
                   h2: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 22,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'NouvelR',
                     color: Colors.black,
                   ),
                   h3: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 19,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'NouvelR',
                     color: Colors.black87,
@@ -606,7 +606,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                     color: Color(0xFFBF046B),
                   ),
                   code: TextStyle(
-                    fontSize: 13,
+                    fontSize: 16,
                     fontFamily: 'monospace',
                     backgroundColor: Colors.grey.shade100,
                     color: const Color(0xFFBF046B),
@@ -648,7 +648,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
               child: Text(
                 content,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 17,
                   fontFamily: 'NouvelR',
                   color: Colors.white,
                   height: 1.4,
@@ -715,7 +715,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 selectable: true,
                 styleSheet: MarkdownStyleSheet(
                   p: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 16,
                     fontFamily: 'NouvelR',
                     color: Colors.black87,
                     height: 1.5,
@@ -785,7 +785,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 ),
               ),
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 18,
                 fontFamily: 'NouvelR',
               ),
             ),
@@ -950,7 +950,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             const Text(
               'Processing...',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 16,
                 fontFamily: 'NouvelR',
                 color: Colors.black54,
               ),
@@ -1052,7 +1052,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                   ? 'Waiting for mindmap data...'
                   : 'No mindmap available for this response',
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 22,
                 fontFamily: 'NouvelR',
                 color: Colors.black54,
               ),
@@ -1099,7 +1099,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 Text(
                   'Mindmap: ${_mindmapData!['nodes']?.length ?? 0} nodes, ${_mindmapData!['edges']?.length ?? 0} edges',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 19,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'NouvelR',
                     color: Colors.black87,
@@ -1176,7 +1176,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                           const Text(
                             'CORPUS',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 38,
                               fontWeight: FontWeight.w700,
                               fontFamily: 'NouvelR',
                               color: Colors.black,
@@ -1186,7 +1186,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                           const Text(
                             'EXPLORER',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 38,
                               fontWeight: FontWeight.w300,
                               fontFamily: 'NouvelR',
                               color: Colors.black,
@@ -1208,7 +1208,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                                 Text(
                                   'New exploration',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontFamily: 'NouvelR',
                                     color: Colors.black,
                                   ),
@@ -1268,7 +1268,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                           Text(
                             'Response',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 22,
                               fontFamily: 'NouvelR',
                               color: _currentTab == 0
                                   ? Colors.black
@@ -1287,7 +1287,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                               child: Text(
                                 '${_events.length}',
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   fontFamily: 'NouvelR',
                                   color: Colors.white,
                                 ),
@@ -1317,7 +1317,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                           Text(
                             'Mindmap',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 22,
                               fontFamily: 'NouvelR',
                               color: _currentTab == 1
                                   ? Colors.black
