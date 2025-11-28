@@ -1,16 +1,19 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_mindmap/flutter_mindmap.dart';
-import '../models/discussion.dart';
-import '../services/api_client.dart';
+import '../models/sse_event.dart';
+import '../services/adk_api_client.dart';
 
 class FocusAnswersPage extends StatefulWidget {
-  final String discussionId;
+  final String topic;
+  final ADKApiClient adkClient;
 
   const FocusAnswersPage({
     super.key,
-    required this.discussionId,
+    required this.topic,
+    required this.adkClient,
   });
 
   @override
@@ -19,12 +22,27 @@ class FocusAnswersPage extends StatefulWidget {
 
 class _FocusAnswersPageState extends State<FocusAnswersPage>
     with TickerProviderStateMixin {
-  int _currentTab = 0; // 0: Summary, 1: Mindmap
+  int _currentTab = 0; // 0: Response, 1: Mindmap
   bool _isLoading = true;
   String? _error;
-  DiscussionDetail? _discussionDetail;
 
-  final ApiClient _apiClient = ApiClient();
+  // SSE events
+  final List<SSEEvent> _events = [];
+  StreamSubscription<SSEEvent>? _sseSubscription;
+
+  // Extracted data
+  String _finalResponse = '';
+  Map<String, dynamic>? _mindmapData;
+
+  // Chat input controller
+  final TextEditingController _chatController = TextEditingController();
+  final FocusNode _chatFocusNode = FocusNode();
+
+  // Conversation history for display
+  final List<ChatMessage> _chatHistory = [];
+
+  // Scroll controller for auto-scroll
+  final ScrollController _scrollController = ScrollController();
 
   // Breathing animation controller
   late AnimationController _breathingController;
@@ -66,92 +84,220 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       ),
     ]).animate(_breathingController);
 
-    _loadDiscussion();
+    _startExploration();
   }
 
   @override
   void dispose() {
+    _sseSubscription?.cancel();
     _breathingController.dispose();
+    _scrollController.dispose();
+    _chatController.dispose();
+    _chatFocusNode.dispose();
     super.dispose();
   }
 
-  /// Load the discussion details from the API
-  Future<void> _loadDiscussion() async {
+  /// Start the SSE exploration with initial topic
+  Future<void> _startExploration() async {
+    // Add initial query to chat history
+    _chatHistory.add(ChatMessage(
+      role: MessageRole.user,
+      content: widget.topic,
+      timestamp: DateTime.now(),
+    ));
+    await _sendMessage(widget.topic);
+  }
+
+  /// Send a new message to continue the conversation
+  Future<void> _sendMessage(String message) async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _events.clear();
+      _finalResponse = '';
+      _mindmapData = null;
+    });
+
+    // Start breathing animation
+    _breathingController.repeat();
+
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      final stream = widget.adkClient.sendMessageSSE(message);
 
-      // Start breathing animation
-      _breathingController.repeat();
+      _sseSubscription = stream.listen(
+        (event) {
+          if (!mounted) return;
 
-      final discussionDetail =
-          await _apiClient.getDiscussion(widget.discussionId);
+          setState(() {
+            _events.add(event);
+          });
 
-      if (!mounted) return;
+          // Extract final response and mindmap
+          _processEvent(event);
 
-      setState(() {
-        _discussionDetail = discussionDetail;
-        _isLoading = false;
-      });
+          // Auto-scroll to bottom
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+          });
+        },
+        onError: (error) {
+          if (!mounted) return;
+          setState(() {
+            _error = error.toString();
+            _isLoading = false;
+          });
+          _breathingController.stop();
+        },
+        onDone: () {
+          if (!mounted) return;
+          setState(() {
+            _isLoading = false;
+          });
+          _breathingController.stop();
 
-      // Stop breathing animation
-      _breathingController.stop();
-      print('✅ Discussion loaded successfully');
+          // Add assistant response to chat history
+          if (_finalResponse.isNotEmpty) {
+            _chatHistory.add(ChatMessage(
+              role: MessageRole.assistant,
+              content: _finalResponse,
+              timestamp: DateTime.now(),
+              hasMindmap: _mindmapData != null,
+            ));
+          }
+          print('✅ SSE stream completed');
+        },
+      );
     } catch (e) {
-      print('❌ Error loading discussion: $e');
       if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
       });
-
-      // Stop breathing animation
       _breathingController.stop();
     }
   }
 
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedBuilder(
-            animation: _breathingController,
-            builder: (context, child) {
-              return Container(
-                width: 120 + (_breathingAnimation.value * 20),
-                height: 120 + (_breathingAnimation.value * 20),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _colorAnimation.value?.withOpacity(0.3),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _colorAnimation.value,
-                    ),
-                  ),
-                ),
-              );
-            },
+  /// Handle sending a follow-up message
+  void _handleSendMessage() {
+    final message = _chatController.text.trim();
+    if (message.isEmpty || _isLoading) return;
+
+    // Add user message to history
+    _chatHistory.add(ChatMessage(
+      role: MessageRole.user,
+      content: message,
+      timestamp: DateTime.now(),
+    ));
+
+    // Clear input
+    _chatController.clear();
+
+    // Send message
+    _sendMessage(message);
+  }
+
+  /// Process an SSE event to extract response and mindmap
+  void _processEvent(SSEEvent event) {
+    // Check for final response (non-thinking text from model)
+    if (event.content.role == 'model' && event.content.mainText.isNotEmpty) {
+      _finalResponse = event.content.mainText;
+
+      // Try to extract mindmap from the response
+      _extractMindmap(_finalResponse);
+    }
+  }
+
+  /// Extract mindmap JSON from the response
+  void _extractMindmap(String text) {
+    print('🔍 Searching for mindmap in response (${text.length} chars)...');
+
+    // Look for JSON block in the response
+    final jsonPattern = RegExp(r'```json\s*([\s\S]*?)\s*```');
+    final match = jsonPattern.firstMatch(text);
+
+    if (match != null) {
+      try {
+        final jsonStr = match.group(1)!;
+        print('📦 Found JSON block (${jsonStr.length} chars)');
+        final parsed = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+        // Check if it has mindmap structure directly or nested
+        if (parsed.containsKey('mindmap')) {
+          final mindmapObj = parsed['mindmap'] as Map<String, dynamic>;
+          setState(() {
+            // Store the full mindmap object with nodes and edges
+            _mindmapData = mindmapObj;
+          });
+          print(
+              '✅ Mindmap extracted successfully (nodes: ${mindmapObj['nodes']?.length}, edges: ${mindmapObj['edges']?.length})');
+        } else if (parsed.containsKey('nodes') && parsed.containsKey('edges')) {
+          // Direct mindmap format without wrapper
+          setState(() {
+            _mindmapData = parsed;
+          });
+          print(
+              '✅ Direct mindmap format extracted (nodes: ${parsed['nodes']?.length}, edges: ${parsed['edges']?.length})');
+        } else {
+          print(
+              '⚠️ JSON found but no mindmap structure (keys: ${parsed.keys.join(", ")})');
+        }
+      } catch (e) {
+        print('⚠️ Failed to parse mindmap JSON: $e');
+      }
+    } else {
+      // Try to find raw JSON without markdown code block
+      try {
+        final startIdx = text.indexOf('{');
+        final endIdx = text.lastIndexOf('}');
+        if (startIdx != -1 && endIdx > startIdx) {
+          final jsonCandidate = text.substring(startIdx, endIdx + 1);
+          final parsed = jsonDecode(jsonCandidate) as Map<String, dynamic>;
+          if (parsed.containsKey('mindmap') ||
+              (parsed.containsKey('nodes') && parsed.containsKey('edges'))) {
+            final mindmapObj = parsed.containsKey('mindmap')
+                ? parsed['mindmap'] as Map<String, dynamic>
+                : parsed;
+            setState(() {
+              _mindmapData = mindmapObj;
+            });
+            print('✅ Raw JSON mindmap extracted');
+          }
+        }
+      } catch (_) {
+        print('ℹ️ No mindmap JSON found in response');
+      }
+    }
+  }
+
+  Widget _buildLoadingIndicator() {
+    return AnimatedBuilder(
+      animation: _breathingController,
+      builder: (context, child) {
+        return Container(
+          width: 60 + (_breathingAnimation.value * 10),
+          height: 60 + (_breathingAnimation.value * 10),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _colorAnimation.value?.withOpacity(0.3),
           ),
-          const SizedBox(height: 32),
-          const Text(
-            'Loading discussion...',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'NouvelR',
-              color: Colors.black,
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _colorAnimation.value,
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -169,7 +315,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             ),
             const SizedBox(height: 16),
             const Text(
-              'Could not load discussion',
+              'Could not complete exploration',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
@@ -191,7 +337,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _loadDiscussion,
+              onPressed: _startExploration,
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
@@ -207,311 +353,172 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
     );
   }
 
-  Widget _buildSummaryTab() {
-    if (_discussionDetail == null) {
-      return const Center(child: Text('No data available'));
-    }
+  /// Build a chat bubble for SSE events (integrated in conversation style)
+  /// Note: finalResponse events are skipped here - they are displayed separately at the end
+  Widget _buildEventBubble(SSEEvent event, int index) {
+    final eventType = event.eventType;
 
-    return Container(
-      padding: const EdgeInsets.all(80),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _discussionDetail!.title,
-              style: const TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'NouvelR',
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: MarkdownBody(
-                data: _discussionDetail!.summary,
-                styleSheet: MarkdownStyleSheet(
-                  p: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'NouvelR',
-                    color: Colors.black87,
-                    height: 1.6,
-                  ),
-                  h1: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'NouvelR',
-                    color: Colors.black,
-                  ),
-                  h2: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'NouvelR',
-                    color: Colors.black,
-                  ),
-                  h3: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'NouvelR',
-                    color: Colors.black,
-                  ),
-                  listBullet: const TextStyle(
-                    fontSize: 16,
-                    fontFamily: 'NouvelR',
-                    color: Color(0xFFBF046B),
-                  ),
-                  strong: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'NouvelR',
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    switch (eventType) {
+      case SSEEventType.thinking:
+        // Thinking bubble - expandable with full content
+        return _buildThinkingBubble(event.content.thoughtText, index);
+
+      case SSEEventType.functionCall:
+        // Tool call - just show the title
+        final funcCall = event.content.parts
+            .firstWhere((p) => p.functionCall != null)
+            .functionCall!;
+        return _buildToolBubble(
+          icon: Icons.build_outlined,
+          title: 'Tool Call',
+          subtitle: funcCall.name,
+          color: const Color(0xFF2196F3),
+        );
+
+      case SSEEventType.functionResponse:
+        // Tool response - just show the title
+        final funcResp = event.content.parts
+            .firstWhere((p) => p.functionResponse != null)
+            .functionResponse!;
+        return _buildToolBubble(
+          icon: Icons.check_circle_outline,
+          title: 'Tool Response',
+          subtitle: funcResp.name,
+          color: const Color(0xFF4CAF50),
+        );
+
+      case SSEEventType.finalResponse:
+        // Skip - final response is displayed separately at the end of conversation
+        return const SizedBox.shrink();
+
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
-  Widget _buildMindmapTab() {
-    if (_discussionDetail == null) {
-      return const Center(child: Text('No data available'));
-    }
-
-    // Convert our mindmap data to JSON string for flutter_mindmap
-    final mindmapJson = {
-      'nodes': _discussionDetail!.mindmap.nodes.map((node) {
-        return {
-          'id': node.id,
-          'label': node.label.replaceAll('\$topic', _discussionDetail!.title),
-          'color': node.color,
-          if (node.tooltip != null) 'tooltip': node.tooltip,
-        };
-      }).toList(),
-      'edges': _discussionDetail!.mindmap.edges.map((edge) {
-        return {
-          'from': edge.from,
-          'to': edge.to,
-        };
-      }).toList(),
-    };
-
-    final jsonString = jsonEncode(mindmapJson);
-
+  Widget _buildThinkingBubble(String content, int index) {
     return Container(
-      padding: const EdgeInsets.all(40),
-      child: MindMapWidget(
-        jsonData: jsonString,
-        useTreeLayout: true,
-        backgroundColor: const Color(0xFFE1DFE2),
-        edgeColor: const Color(0xFF535450),
-        animationDuration: const Duration(seconds: 2),
-        allowNodeOverlap: false,
-        expandAllNodesByDefault: false,
-        tooltipBackgroundColor: const Color(0xFF535450).withOpacity(0.9),
-        tooltipTextColor: Colors.white,
-        tooltipTextSize: 14.0,
-        tooltipBorderRadius: 10.0,
-        tooltipPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 10,
-        ),
-        tooltipMaxWidth: 280.0,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE1DFE2),
-      body: Stack(
+      margin: const EdgeInsets.only(bottom: 12, right: 60),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Main content
-          SafeArea(
-            child: Column(
-              children: [
-                // Header section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top row with title, back button, and close button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Left section with DYNAMIC PERSONA title and back button
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'DYNAMIC',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'NouvelR',
-                                  color: Colors.black,
-                                  height: 1.0,
-                                ),
-                              ),
-                              const Text(
-                                'PERSONA',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w300,
-                                  fontFamily: 'NouvelR',
-                                  color: Colors.black,
-                                  height: 1.0,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              // Back to start button
-                              GestureDetector(
-                                onTap: () => Navigator.pop(context),
-                                child: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_back,
-                                      size: 24,
-                                      color: Colors.black,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Back to discussions',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontFamily: 'NouvelR',
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          // Close button
-                          GestureDetector(
-                            onTap: () => Navigator.popUntil(
-                                context, (route) => route.isFirst),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                    color: const Color(0xFFC4C4C4), width: 0.5),
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Color(0xFF535450),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xFF9C27B0).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.psychology,
+              color: Color(0xFF9C27B0),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF9C27B0).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF9C27B0).withOpacity(0.2),
+                  width: 1,
                 ),
-
-                // Toggle buttons for Summary / Mindmap
-                if (!_isLoading && _error == null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 80, vertical: 20),
-                    child: Row(
-                      children: [
-                        // Summary tab
-                        GestureDetector(
-                          onTap: () => setState(() => _currentTab = 0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.article_outlined,
-                                  size: 24,
-                                  color: _currentTab == 0
-                                      ? Colors.black
-                                      : const Color(0xFFC4C4C4),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Summary',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontFamily: 'NouvelR',
-                                    color: _currentTab == 0
-                                        ? Colors.black
-                                        : const Color(0xFFC4C4C4),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 32),
-                        // Mindmap tab
-                        GestureDetector(
-                          onTap: () => setState(() => _currentTab = 1),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.account_tree_outlined,
-                                  size: 24,
-                                  color: _currentTab == 1
-                                      ? Colors.black
-                                      : const Color(0xFFC4C4C4),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Mindmap',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontFamily: 'NouvelR',
-                                    color: _currentTab == 1
-                                        ? Colors.black
-                                        : const Color(0xFFC4C4C4),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+              ),
+              child: Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  title: const Text(
+                    '💭 Thinking...',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'NouvelR',
+                      color: Color(0xFF9C27B0),
                     ),
                   ),
+                  initiallyExpanded: false,
+                  children: [
+                    SelectableText(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black87,
+                        height: 1.5,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                // Tab content
-                Expanded(
-                  child: _isLoading
-                      ? _buildLoadingState()
-                      : _error != null
-                          ? _buildErrorState()
-                          : _currentTab == 0
-                              ? _buildSummaryTab()
-                              : _buildMindmapTab(),
+  Widget _buildToolBubble({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8, right: 100),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'NouvelR',
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'NouvelR',
+                    color: color.withOpacity(0.8),
+                  ),
                 ),
               ],
             ),
@@ -520,4 +527,868 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       ),
     );
   }
+
+  Widget _buildFinalResponseBubble(String content) {
+    if (content.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12, top: 8, right: 40),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFBF046B).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Color(0xFFBF046B),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: MarkdownBody(
+                data: content,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(
+                    fontSize: 14,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                    height: 1.6,
+                  ),
+                  strong: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                  ),
+                  em: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                  ),
+                  h1: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
+                  ),
+                  h2: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black,
+                  ),
+                  h3: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                  ),
+                  listBullet: const TextStyle(
+                    color: Color(0xFFBF046B),
+                  ),
+                  code: TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'monospace',
+                    backgroundColor: Colors.grey.shade100,
+                    color: const Color(0xFFBF046B),
+                  ),
+                  codeblockDecoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserMessageBubble(String content) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, left: 60),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFBF046B),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                content,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'NouvelR',
+                  color: Colors.white,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFF535450).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.person_outline,
+              color: Color(0xFF535450),
+              size: 20,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a bubble for previous assistant answers (more compact)
+  Widget _buildPreviousAnswerBubble(String content) {
+    final cleanedContent = _cleanFinalResponse(content);
+    if (cleanedContent.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, right: 40),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: const Color(0xFFBF046B).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Color(0xFFBF046B),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                  width: 1,
+                ),
+              ),
+              child: MarkdownBody(
+                data: cleanedContent,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                    height: 1.5,
+                  ),
+                  strong: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                  ),
+                  listBullet: const TextStyle(
+                    color: Color(0xFFBF046B),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatInputBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _chatController,
+              focusNode: _chatFocusNode,
+              enabled: !_isLoading,
+              onSubmitted: (_) => _handleSendMessage(),
+              decoration: InputDecoration(
+                hintText: _isLoading
+                    ? 'Waiting for response...'
+                    : 'Continue the conversation...',
+                hintStyle: const TextStyle(
+                  fontFamily: 'NouvelR',
+                  color: Colors.black38,
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF5F5F5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFBF046B),
+                    width: 2,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 15,
+                fontFamily: 'NouvelR',
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _isLoading ? null : _handleSendMessage,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color:
+                    _isLoading ? Colors.grey.shade300 : const Color(0xFFBF046B),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: _isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResponseTab() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Conversation view - all messages and events in one scrollable list
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: _getConversationItemCount(),
+              itemBuilder: (context, index) {
+                return _buildConversationItem(index);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get completed previous exchanges (question + answer pairs, excluding current in-progress)
+  List<_ConversationExchange> _getPreviousExchanges() {
+    final exchanges = <_ConversationExchange>[];
+
+    // Find pairs of user -> assistant messages (completed exchanges)
+    int i = 0;
+    while (i < _chatHistory.length) {
+      if (_chatHistory[i].role == MessageRole.user) {
+        // Check if there's a following assistant response
+        if (i + 1 < _chatHistory.length &&
+            _chatHistory[i + 1].role == MessageRole.assistant) {
+          // This is a completed exchange, but skip if it's the current one being processed
+          // Current one = last user message when we're still loading or just finished
+          final isCurrentExchange =
+              (i == _chatHistory.length - 2) || (i == _chatHistory.length - 1);
+          if (!isCurrentExchange) {
+            exchanges.add(_ConversationExchange(
+              question: _chatHistory[i].content,
+              answer: _chatHistory[i + 1].content,
+            ));
+          }
+          i += 2;
+        } else {
+          // User message without response yet - this is current
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+    return exchanges;
+  }
+
+  /// Get the current user question (the one being processed or just finished)
+  String _getCurrentQuestion() {
+    // Find the last user message
+    for (int i = _chatHistory.length - 1; i >= 0; i--) {
+      if (_chatHistory[i].role == MessageRole.user) {
+        return _chatHistory[i].content;
+      }
+    }
+    return widget.topic;
+  }
+
+  /// Calculate total items in conversation
+  int _getConversationItemCount() {
+    final previousExchanges = _getPreviousExchanges();
+    final nonFinalEvents =
+        _events.where((e) => e.eventType != SSEEventType.finalResponse).length;
+    final hasFinalResponse = _finalResponse.isNotEmpty && !_isLoading;
+
+    // Previous exchanges (each = 2 items) + current question + events + final response/loading
+    return (previousExchanges.length * 2) +
+        1 +
+        nonFinalEvents +
+        (hasFinalResponse ? 1 : 0) +
+        (_isLoading ? 1 : 0);
+  }
+
+  /// Build a conversation item based on index
+  Widget _buildConversationItem(int index) {
+    final previousExchanges = _getPreviousExchanges();
+    final previousItemsCount = previousExchanges.length * 2;
+
+    // Previous exchanges first
+    if (index < previousItemsCount) {
+      final exchangeIndex = index ~/ 2;
+      final isQuestion = index % 2 == 0;
+      final exchange = previousExchanges[exchangeIndex];
+
+      if (isQuestion) {
+        return _buildUserMessageBubble(exchange.question);
+      } else {
+        return _buildPreviousAnswerBubble(exchange.answer);
+      }
+    }
+
+    // Current question
+    final currentIndex = index - previousItemsCount;
+    if (currentIndex == 0) {
+      return _buildUserMessageBubble(_getCurrentQuestion());
+    }
+
+    // Events and final response
+    final eventsIndex = currentIndex - 1;
+    final nonFinalEvents = _events
+        .where((e) => e.eventType != SSEEventType.finalResponse)
+        .toList();
+
+    // Show events
+    if (eventsIndex < nonFinalEvents.length) {
+      return _buildEventBubble(nonFinalEvents[eventsIndex], eventsIndex);
+    }
+
+    // After events
+    final positionAfterEvents = eventsIndex - nonFinalEvents.length;
+
+    // Loading indicator
+    if (_isLoading && positionAfterEvents == 0) {
+      return Container(
+        margin: const EdgeInsets.only(left: 42, top: 8, bottom: 8),
+        child: Row(
+          children: [
+            _buildLoadingIndicator(),
+            const SizedBox(width: 12),
+            const Text(
+              'Processing...',
+              style: TextStyle(
+                fontSize: 13,
+                fontFamily: 'NouvelR',
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Final response (only once, at the end)
+    if (!_isLoading && _finalResponse.isNotEmpty && positionAfterEvents == 0) {
+      return _buildFinalResponseBubble(_cleanFinalResponse(_finalResponse));
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  /// Clean the final response by removing mindmap JSON data
+  String _cleanFinalResponse(String text) {
+    String cleaned = text;
+
+    // Remove ```json ... ``` blocks
+    cleaned =
+        cleaned.replaceAll(RegExp(r'```json[\s\S]*?```', multiLine: true), '');
+    cleaned =
+        cleaned.replaceAll(RegExp(r'```[\s\S]*?```', multiLine: true), '');
+
+    // Remove everything after "MINDMAP:" or "📊 MINDMAP:" if followed by JSON
+    final mindmapIndex = cleaned.toLowerCase().indexOf('mindmap:');
+    if (mindmapIndex != -1) {
+      // Check if there's a JSON object after mindmap
+      final afterMindmap = cleaned.substring(mindmapIndex);
+      final jsonStart = afterMindmap.indexOf('{');
+      if (jsonStart != -1 && jsonStart < 50) {
+        // There's JSON shortly after "MINDMAP:", remove from there
+        cleaned = cleaned.substring(0, mindmapIndex);
+      }
+    }
+
+    // Remove standalone large JSON objects (more than 100 chars with "nodes" or "edges")
+    final jsonPattern =
+        RegExp(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', multiLine: true);
+    cleaned = cleaned.replaceAllMapped(jsonPattern, (match) {
+      final json = match.group(0) ?? '';
+      if (json.length > 100 &&
+          (json.contains('"nodes"') ||
+              json.contains('"edges"') ||
+              json.contains('"from"') ||
+              json.contains('"to"'))) {
+        return '';
+      }
+      return json;
+    });
+
+    // Remove lines that look like JSON array items
+    cleaned = cleaned.replaceAll(
+        RegExp(r'^\s*\{[^}]*"from"[^}]*"to"[^}]*\},?\s*$', multiLine: true),
+        '');
+    cleaned = cleaned.replaceAll(
+        RegExp(r'^\s*\{[^}]*"id"[^}]*"label"[^}]*\},?\s*$', multiLine: true),
+        '');
+
+    // Remove orphan JSON brackets and content
+    cleaned =
+        cleaned.replaceAll(RegExp(r'^\s*[\[\]{}]\s*$', multiLine: true), '');
+    cleaned = cleaned.replaceAll(
+        RegExp(r'^\s*"[^"]+"\s*:\s*[\[\{]', multiLine: true), '');
+
+    // Remove "MINDMAP:" labels (with or without emoji)
+    cleaned = cleaned.replaceAll(
+        RegExp(r'🗺️\s*MINDMAP:?', caseSensitive: false), '');
+    cleaned =
+        cleaned.replaceAll(RegExp(r'📊\s*MINDMAP:?', caseSensitive: false), '');
+    cleaned = cleaned.replaceAll(
+        RegExp(r'\*\*\s*MINDMAP:?\s*\*\*', caseSensitive: false), '');
+    cleaned = cleaned.replaceAll(RegExp(r'MINDMAP:', caseSensitive: false), '');
+
+    // Clean up excessive whitespace
+    cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    cleaned = cleaned.replaceAll(RegExp(r'^\s+', multiLine: true), '');
+
+    return cleaned.trim();
+  }
+
+  Widget _buildMindmapTab() {
+    if (_mindmapData == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _isLoading ? Icons.hourglass_empty : Icons.account_tree_outlined,
+              size: 64,
+              color: Colors.black26,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _isLoading
+                  ? 'Waiting for mindmap data...'
+                  : 'No mindmap available for this response',
+              style: const TextStyle(
+                fontSize: 18,
+                fontFamily: 'NouvelR',
+                color: Colors.black54,
+              ),
+            ),
+            if (_isLoading) ...[
+              const SizedBox(height: 24),
+              _buildLoadingIndicator(),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Convert mindmap data to JSON string for flutter_mindmap
+    final jsonString = jsonEncode(_mindmapData);
+    print(
+        '🗺️ Rendering mindmap with JSON: ${jsonString.substring(0, jsonString.length > 200 ? 200 : jsonString.length)}...');
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mindmap info header
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.account_tree,
+                    color: Color(0xFF4CAF50), size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Mindmap: ${_mindmapData!['nodes']?.length ?? 0} nodes, ${_mindmapData!['edges']?.length ?? 0} edges',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'NouvelR',
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Mindmap widget
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: MindMapWidget(
+                  jsonData: jsonString,
+                  useTreeLayout: true,
+                  backgroundColor: Colors.white,
+                  edgeColor: const Color(0xFF535450),
+                  animationDuration: const Duration(seconds: 2),
+                  allowNodeOverlap: false,
+                  expandAllNodesByDefault: true,
+                  tooltipBackgroundColor:
+                      const Color(0xFF535450).withOpacity(0.9),
+                  tooltipTextColor: Colors.white,
+                  tooltipTextSize: 14.0,
+                  tooltipBorderRadius: 10.0,
+                  tooltipPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  tooltipMaxWidth: 280.0,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE1DFE2),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 24, left: 80, right: 80),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top row with title, back button, and close button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left section with CORPUS EXPLORER title and back button
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'CORPUS',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                              height: 1.0,
+                            ),
+                          ),
+                          const Text(
+                            'EXPLORER',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w300,
+                              fontFamily: 'NouvelR',
+                              color: Colors.black,
+                              height: 1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Back to start button
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.arrow_back,
+                                  size: 24,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'New exploration',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'NouvelR',
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Close button
+                      GestureDetector(
+                        onTap: () => Navigator.popUntil(
+                            context, (route) => route.isFirst),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: const Color(0xFFC4C4C4), width: 0.5),
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Color(0xFF535450),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Toggle buttons for Response / Mindmap
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 20),
+              child: Row(
+                children: [
+                  // Response tab
+                  GestureDetector(
+                    onTap: () => setState(() => _currentTab = 0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.chat_outlined,
+                            size: 24,
+                            color: _currentTab == 0
+                                ? Colors.black
+                                : const Color(0xFFC4C4C4),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Response',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontFamily: 'NouvelR',
+                              color: _currentTab == 0
+                                  ? Colors.black
+                                  : const Color(0xFFC4C4C4),
+                            ),
+                          ),
+                          if (_events.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFBF046B),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${_events.length}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'NouvelR',
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  // Mindmap tab
+                  GestureDetector(
+                    onTap: () => setState(() => _currentTab = 1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.account_tree_outlined,
+                            size: 24,
+                            color: _currentTab == 1
+                                ? Colors.black
+                                : const Color(0xFFC4C4C4),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Mindmap',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontFamily: 'NouvelR',
+                              color: _currentTab == 1
+                                  ? Colors.black
+                                  : const Color(0xFFC4C4C4),
+                            ),
+                          ),
+                          if (_mindmapData != null)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4CAF50),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Tab content
+            Expanded(
+              child: _error != null
+                  ? _buildErrorState()
+                  : _currentTab == 0
+                      ? _buildResponseTab()
+                      : _buildMindmapTab(),
+            ),
+
+            // Chat input bar (only on Response tab)
+            if (_currentTab == 0) _buildChatInputBar(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Represents a chat message in the conversation
+enum MessageRole { user, assistant }
+
+class ChatMessage {
+  final MessageRole role;
+  final String content;
+  final DateTime timestamp;
+  final bool hasMindmap;
+
+  const ChatMessage({
+    required this.role,
+    required this.content,
+    required this.timestamp,
+    this.hasMindmap = false,
+  });
+}
+
+/// Represents a previous conversation exchange (question + answer)
+class _ConversationExchange {
+  final String question;
+  final String answer;
+
+  const _ConversationExchange({
+    required this.question,
+    required this.answer,
+  });
 }

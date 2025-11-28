@@ -15,7 +15,7 @@ dependencies:
   uuid: ^3.0.7
   cupertino_icons: ^1.0.6
   flutter_dotenv: ^5.1.0
-  flutter_markdown: ^0.7.4
+  flutter_markdown_plus: ^1.0.5
   flutter_mindmap:
     git:
       url: https://github.com/FrenchPOC/flutter_mindmap.git
