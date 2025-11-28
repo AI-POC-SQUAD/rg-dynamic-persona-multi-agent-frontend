@@ -314,65 +314,23 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
 
     return Container(
       padding: const EdgeInsets.all(40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Color(0xFF535450),
-                  size: 20,
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Interactive Mind Map - Pan to move, pinch to zoom',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: 'NouvelR',
-                      color: Color(0xFF535450),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: MindMapWidget(
-              jsonData: jsonString,
-              useTreeLayout: true,
-              backgroundColor: const Color(0xFFE1DFE2),
-              edgeColor: const Color(0xFF535450),
-              animationDuration: const Duration(seconds: 2),
-              allowNodeOverlap: false,
-              expandAllNodesByDefault: false,
-              tooltipBackgroundColor: const Color(0xFF535450).withOpacity(0.9),
-              tooltipTextColor: Colors.white,
-              tooltipTextSize: 14.0,
-              tooltipBorderRadius: 10.0,
-              tooltipPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-              tooltipMaxWidth: 280.0,
-            ),
-          ),
-        ],
+      child: MindMapWidget(
+        jsonData: jsonString,
+        useTreeLayout: true,
+        backgroundColor: const Color(0xFFE1DFE2),
+        edgeColor: const Color(0xFF535450),
+        animationDuration: const Duration(seconds: 2),
+        allowNodeOverlap: false,
+        expandAllNodesByDefault: false,
+        tooltipBackgroundColor: const Color(0xFF535450).withOpacity(0.9),
+        tooltipTextColor: Colors.white,
+        tooltipTextSize: 14.0,
+        tooltipBorderRadius: 10.0,
+        tooltipPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 10,
+        ),
+        tooltipMaxWidth: 280.0,
       ),
     );
   }
