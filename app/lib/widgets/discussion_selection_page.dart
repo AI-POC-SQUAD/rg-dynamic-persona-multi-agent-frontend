@@ -1,3 +1,7 @@
+import 'dart:convert';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/conversation.dart';
@@ -391,6 +395,22 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                 ),
               ),
               const SizedBox(width: 16),
+              // Save As button
+              _buildHeaderButton(
+                icon: Icons.save_alt,
+                label: 'Save As',
+                onPressed: _saveDataToFile,
+                tooltip: 'Save all conversations and mindmaps to a file',
+              ),
+              const SizedBox(width: 8),
+              // Load button
+              _buildHeaderButton(
+                icon: Icons.upload_file,
+                label: 'Load',
+                onPressed: _loadDataFromFile,
+                tooltip: 'Load conversations and mindmaps from a file',
+              ),
+              const SizedBox(width: 16),
               // Refresh button
               IconButton(
                 onPressed: () {
@@ -409,6 +429,240 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    String? tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip ?? label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: Colors.grey.shade700),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'NouvelR',
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Save all conversations and mindmaps to a JSON file
+  void _saveDataToFile() {
+    try {
+      // Get export data from storage client
+      final jsonData = _adkClient.storageClient.exportData();
+      
+      // Create filename with timestamp
+      final now = DateTime.now();
+      final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+      final filename = 'corpus_explorer_backup_$timestamp.json';
+      
+      // Create blob and trigger download
+      final bytes = utf8.encode(jsonData);
+      final blob = html.Blob([bytes], 'application/json');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', filename)
+        ..style.display = 'none';
+      
+      html.document.body!.children.add(anchor);
+      anchor.click();
+      anchor.remove();
+      html.Url.revokeObjectUrl(url);
+      
+      _showSuccessSnackBar('Data saved to $filename');
+      print('💾 Data exported to $filename');
+    } catch (e) {
+      _showErrorSnackBar('Failed to save data: $e');
+      print('❌ Failed to export data: $e');
+    }
+  }
+
+  /// Load conversations and mindmaps from a JSON file
+  void _loadDataFromFile() {
+    final input = html.FileUploadInputElement()
+      ..accept = '.json'
+      ..style.display = 'none';
+    
+    html.document.body!.children.add(input);
+    
+    input.onChange.listen((event) async {
+      final files = input.files;
+      if (files == null || files.isEmpty) {
+        input.remove();
+        return;
+      }
+      
+      final file = files[0];
+      final reader = html.FileReader();
+      
+      reader.onLoadEnd.listen((event) {
+        try {
+          final content = reader.result as String;
+          
+          // Show confirmation dialog
+          _showLoadConfirmationDialog(content, file.name);
+        } catch (e) {
+          _showErrorSnackBar('Failed to read file: $e');
+          print('❌ Failed to read file: $e');
+        }
+        input.remove();
+      });
+      
+      reader.onError.listen((event) {
+        _showErrorSnackBar('Error reading file');
+        input.remove();
+      });
+      
+      reader.readAsText(file);
+    });
+    
+    input.click();
+  }
+
+  /// Show confirmation dialog before overwriting localStorage
+  void _showLoadConfirmationDialog(String jsonContent, String filename) {
+    // Parse to validate and show stats
+    Map<String, dynamic>? parsedData;
+    int conversationCount = 0;
+    int mindmapCount = 0;
+    
+    try {
+      parsedData = jsonDecode(jsonContent) as Map<String, dynamic>;
+      final conversations = parsedData['conversations'] as Map<String, dynamic>?;
+      final mindmaps = parsedData['mindmaps'] as Map<String, dynamic>?;
+      conversationCount = conversations?.length ?? 0;
+      mindmapCount = mindmaps?.length ?? 0;
+    } catch (e) {
+      _showErrorSnackBar('Invalid backup file format');
+      return;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 28),
+            const SizedBox(width: 12),
+            const Text('Load Backup?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This will replace ALL current data with the backup from:',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    filename,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('• $conversationCount conversations'),
+                  Text('• $mindmapCount mindmaps'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Current data will be permanently overwritten.',
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performDataLoad(jsonContent);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFBF046B),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Load & Replace'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Actually perform the data load after confirmation
+  void _performDataLoad(String jsonContent) {
+    final success = _adkClient.storageClient.importData(jsonContent);
+    
+    if (success) {
+      _showSuccessSnackBar('Data loaded successfully! Refreshing...');
+      // Reload conversations list
+      _loadSavedConversations();
+    } else {
+      _showErrorSnackBar('Failed to load data');
+    }
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(message),
+          ],
+        ),
+        backgroundColor: const Color(0xFF4CAF50),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

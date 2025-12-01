@@ -159,17 +159,21 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
 
   /// Start the SSE exploration with initial topic
   Future<void> _startExploration() async {
-    // Add initial query to chat history
+    // Format the initial message with a prefix for the agent
+    final formattedMessage = 'I would like to explore the subject: ${widget.topic}';
+    
+    // Add initial query to chat history (show only the topic to user for cleaner UI)
     _chatHistory.add(ChatMessage(
       role: MessageRole.user,
       content: widget.topic,
       timestamp: DateTime.now(),
     ));
 
-    // Save user message to storage
-    await widget.adkClient.addUserMessage(widget.topic);
+    // Save user message to storage (with the formatted version)
+    await widget.adkClient.addUserMessage(formattedMessage);
 
-    await _sendMessage(widget.topic);
+    // Send the formatted message to the agent
+    await _sendMessage(formattedMessage);
   }
 
   /// Send a new message to continue the conversation
@@ -1066,6 +1070,13 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Continue button
+                  _buildSuggestionChip(
+                    icon: Icons.play_arrow_outlined,
+                    label: 'Continue',
+                    onTap: () => _sendSuggestion('You can continue.'),
+                  ),
+                  const SizedBox(width: 12),
                   // Generate/Update Mindmap button - always available
                   _buildSuggestionChip(
                     icon: Icons.account_tree_outlined,
