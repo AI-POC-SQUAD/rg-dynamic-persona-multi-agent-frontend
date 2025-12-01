@@ -106,8 +106,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: develop
-      resolved-ref: "249e688a6418d431c836afdcd2c9c4e5b227f841"
+      ref: main
+      resolved-ref: "2ed56481f0fed6520a520fa7d60de50e56da31e3"
       url: "https://github.com/FrenchPOC/flutter_mindmap.git"
     source: git
     version: "0.1.1"

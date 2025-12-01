@@ -1126,12 +1126,12 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                 borderRadius: BorderRadius.circular(16),
                 child: MindMapWidget(
                   jsonData: jsonString,
-                  useTreeLayout: true,
+                  layoutType: MindMapLayoutType.bidirectional,
                   backgroundColor: Colors.white,
                   edgeColor: const Color(0xFF535450),
                   animationDuration: const Duration(seconds: 2),
                   allowNodeOverlap: false,
-                  expandAllNodesByDefault: true,
+                  expandAllNodesByDefault: false,
                   tooltipBackgroundColor:
                       const Color(0xFF535450).withOpacity(0.9),
                   tooltipTextColor: Colors.white,
