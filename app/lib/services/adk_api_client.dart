@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 
+import '../models/conversation.dart';
 import '../models/sse_event.dart';
+import 'storage_client.dart';
 
 /// Session information from ADK API
 class ADKSession {
@@ -25,15 +27,25 @@ class ADKSession {
       userId: json['userId'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'appName': appName,
+      'userId': userId,
+    };
+  }
 }
 
-/// Client for the Google ADK API with SSE support
+/// Client for the Google ADK API with SSE support and localStorage persistence
 class ADKApiClient {
   final String baseUrl;
   final String appName;
   final String userId;
+  final StorageClient _storageClient = StorageClient();
 
   ADKSession? _session;
+  Conversation? _conversation;
 
   ADKApiClient({
     this.baseUrl = 'http://127.0.0.1:8000',
@@ -46,6 +58,12 @@ class ADKApiClient {
 
   /// Check if a session is active
   bool get hasSession => _session != null;
+
+  /// Get the current conversation
+  Conversation? get conversation => _conversation;
+
+  /// Get the storage client
+  StorageClient get storageClient => _storageClient;
 
   /// List available apps
   Future<List<String>> listApps() async {
@@ -62,7 +80,7 @@ class ADKApiClient {
   }
 
   /// Create a new session for the specified app
-  Future<ADKSession> createSession() async {
+  Future<ADKSession> createSession({String? initialTopic}) async {
     final response = await http.post(
       Uri.parse('$baseUrl/apps/$appName/users/$userId/sessions'),
       headers: {'Content-Type': 'application/json'},
@@ -72,9 +90,88 @@ class ADKApiClient {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       _session = ADKSession.fromJson(data);
+
+      // Create a new conversation for this session
+      _conversation = Conversation.create(
+        sessionId: _session!.id,
+        appName: appName,
+        userId: userId,
+        initialTopic: initialTopic ?? 'New conversation',
+      );
+
+      // Save the conversation to localStorage
+      await _storageClient.saveConversation(_conversation!);
+      print('💾 New conversation saved: ${_session!.id}');
+
       return _session!;
     }
     throw Exception('Failed to create session: ${response.statusCode}');
+  }
+
+  /// Restore a session from a previous conversation stored in GCS
+  /// Returns true if the conversation was found and restored
+  Future<bool> restoreSession(String sessionId) async {
+    print('🔄 Attempting to restore session: $sessionId');
+
+    // Try to load the conversation from localStorage
+    final conversation = await _storageClient.loadConversation(sessionId);
+
+    if (conversation != null) {
+      _conversation = conversation;
+
+      // Create a mock session object (the actual ADK session may not exist anymore)
+      _session = ADKSession(
+        id: sessionId,
+        appName: conversation.appName,
+        userId: conversation.userId,
+      );
+
+      print('✅ Session restored: $sessionId');
+      print('   - Title: ${conversation.title}');
+      print('   - Messages: ${conversation.messages.length}');
+      return true;
+    }
+
+    print('❌ Could not find conversation: $sessionId');
+    return false;
+  }
+
+  /// Try to reconnect to the ADK backend with an existing session
+  /// This is useful when restoring a session and wanting to continue the conversation
+  Future<bool> reconnectSession() async {
+    if (_session == null) {
+      return false;
+    }
+
+    try {
+      // Try to create a new session with the same app/user
+      // (ADK doesn't support session restoration, so we create a new one)
+      final response = await http.post(
+        Uri.parse('$baseUrl/apps/$appName/users/$userId/sessions'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final newSession = ADKSession.fromJson(data);
+
+        // Update conversation with new session ID but keep history
+        if (_conversation != null) {
+          _conversation = _conversation!.copyWith(
+            sessionId: newSession.id,
+          );
+          await _storageClient.saveConversation(_conversation!);
+        }
+
+        _session = newSession;
+        print('✅ Reconnected to ADK with new session: ${newSession.id}');
+        return true;
+      }
+    } catch (e) {
+      print('❌ Failed to reconnect to ADK: $e');
+    }
+    return false;
   }
 
   /// Send a message and receive SSE events as a stream (real-time for web)
@@ -135,6 +232,18 @@ class ADKApiClient {
           if (jsonStr.isNotEmpty) {
             try {
               final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+              // Debug: print content parts to see thought structure
+              final content = json['content'] as Map<String, dynamic>?;
+              if (content != null) {
+                final parts = content['parts'] as List<dynamic>?;
+                if (parts != null && parts.isNotEmpty) {
+                  for (var part in parts) {
+                    if (part is Map && part['thought'] == true) {
+                      print('🧠 RAW THOUGHT: ${(part['text'] as String?)?.substring(0, ((part['text'] as String?)?.length ?? 0).clamp(0, 80))}...');
+                    }
+                  }
+                }
+              }
               controller.add(SSEEvent.fromJson(json));
             } catch (e) {
               print('Warning: Could not parse SSE event: $e');
@@ -171,5 +280,96 @@ class ADKApiClient {
   /// Reset the session
   void resetSession() {
     _session = null;
+    _conversation = null;
+  }
+
+  // ============================================================
+  // CONVERSATION PERSISTENCE METHODS
+  // ============================================================
+
+  /// Add a user message to the conversation and save to GCS
+  Future<void> addUserMessage(String content) async {
+    if (_conversation == null) return;
+
+    final message = ConversationMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      role: ConversationRole.user,
+      content: content,
+      timestamp: DateTime.now(),
+    );
+
+    _conversation = _conversation!.addMessage(message);
+    await _storageClient.saveConversation(_conversation!);
+    print('💾 User message saved to conversation');
+  }
+
+  /// Add an assistant response to the conversation and save to GCS
+  Future<void> addAssistantMessage(
+    String content, {
+    bool hasMindmap = false,
+    Map<String, dynamic>? mindmapData,
+    List<ConversationEvent>? events,
+  }) async {
+    if (_conversation == null) return;
+
+    final message = ConversationMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      role: ConversationRole.assistant,
+      content: content,
+      timestamp: DateTime.now(),
+      hasMindmap: hasMindmap,
+      mindmapData: mindmapData,
+      events: events,
+    );
+
+    _conversation = _conversation!.addMessage(message);
+    await _storageClient.saveConversation(_conversation!);
+    print('💾 Assistant message saved to conversation');
+
+    // If there's a mindmap, save it separately
+    if (hasMindmap && mindmapData != null) {
+      await saveMindmap(mindmapData);
+    }
+  }
+
+  /// Save/update the mindmap for the current conversation
+  Future<bool> saveMindmap(Map<String, dynamic> mindmapData) async {
+    if (_session == null) return false;
+
+    final success = await _storageClient.saveMindmap(_session!.id, mindmapData);
+    if (success) {
+      print('🗺️ Mindmap saved for session: ${_session!.id}');
+    }
+    return success;
+  }
+
+  /// Load the mindmap for the current conversation
+  Future<Map<String, dynamic>?> loadMindmap() async {
+    if (_session == null) return null;
+    return await _storageClient.loadMindmap(_session!.id);
+  }
+
+  /// Check if a mindmap exists for the current conversation
+  Future<bool> hasMindmap() async {
+    if (_session == null) return false;
+    return await _storageClient.hasMindmap(_session!.id);
+  }
+
+  /// List all saved conversations
+  Future<List<ConversationSummary>> listConversations() async {
+    return await _storageClient.listConversations();
+  }
+
+  /// Delete a conversation
+  Future<bool> deleteConversation(String sessionId) async {
+    return await _storageClient.deleteConversation(sessionId);
+  }
+
+  /// Update the conversation title
+  Future<void> updateConversationTitle(String newTitle) async {
+    if (_conversation == null) return;
+
+    _conversation = _conversation!.copyWith(title: newTitle);
+    await _storageClient.saveConversation(_conversation!);
   }
 }

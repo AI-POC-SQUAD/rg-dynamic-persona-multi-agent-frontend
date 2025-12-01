@@ -166,7 +166,8 @@ enum SSEEventType {
 /// Extension to get the event type
 extension SSEEventTypeExtension on SSEEvent {
   SSEEventType get eventType {
-    if (content.hasThought && !content.hasFunctionCall) {
+    // Prioritize thoughts - they should always be shown
+    if (content.hasThought) {
       return SSEEventType.thinking;
     } else if (content.hasFunctionCall) {
       return SSEEventType.functionCall;
@@ -177,4 +178,7 @@ extension SSEEventTypeExtension on SSEEvent {
     }
     return SSEEventType.unknown;
   }
+  
+  /// Check if this event also has a function call (in addition to thought)
+  bool get hasAssociatedFunctionCall => content.hasFunctionCall;
 }

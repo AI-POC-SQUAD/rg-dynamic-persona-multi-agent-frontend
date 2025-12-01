@@ -3,17 +3,20 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_mindmap/flutter_mindmap.dart';
+import '../models/conversation.dart';
 import '../models/sse_event.dart';
 import '../services/adk_api_client.dart';
 
 class FocusAnswersPage extends StatefulWidget {
   final String topic;
   final ADKApiClient adkClient;
+  final bool isRestoredSession;
 
   const FocusAnswersPage({
     super.key,
     required this.topic,
     required this.adkClient,
+    this.isRestoredSession = false,
   });
 
   @override
@@ -84,7 +87,12 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       ),
     ]).animate(_breathingController);
 
-    _startExploration();
+    // If this is a restored session, load the conversation history
+    if (widget.isRestoredSession) {
+      _loadRestoredConversation();
+    } else {
+      _startExploration();
+    }
   }
 
   @override
@@ -97,6 +105,58 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
     super.dispose();
   }
 
+  /// Load conversation history from a restored session
+  Future<void> _loadRestoredConversation() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final conversation = widget.adkClient.conversation;
+      if (conversation != null) {
+        // Restore chat history from saved messages
+        for (final message in conversation.messages) {
+          _chatHistory.add(ChatMessage(
+            role: message.role == ConversationRole.user
+                ? MessageRole.user
+                : MessageRole.assistant,
+            content: message.content,
+            timestamp: message.timestamp,
+            hasMindmap: message.hasMindmap,
+          ));
+
+          // If the last assistant message has a mindmap, set it
+          if (message.role == ConversationRole.assistant &&
+              message.hasMindmap &&
+              message.mindmapData != null) {
+            _mindmapData = message.mindmapData;
+          }
+        }
+
+        // Also try to load the latest mindmap from storage if not already set
+        if (_mindmapData == null) {
+          final storedMindmap = await widget.adkClient.loadMindmap();
+          if (storedMindmap != null) {
+            _mindmapData = storedMindmap;
+            print('🗺️ Mindmap loaded from storage');
+          }
+        }
+
+        print(
+            '✅ Restored ${_chatHistory.length} messages from conversation');
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load conversation: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
   /// Start the SSE exploration with initial topic
   Future<void> _startExploration() async {
     // Add initial query to chat history
@@ -105,6 +165,10 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       content: widget.topic,
       timestamp: DateTime.now(),
     ));
+
+    // Save user message to storage
+    await widget.adkClient.addUserMessage(widget.topic);
+
     await _sendMessage(widget.topic);
   }
 
@@ -115,11 +179,14 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       _error = null;
       _events.clear();
       _finalResponse = '';
-      _mindmapData = null;
+      // Don't clear mindmap data - we want to keep the previous one until a new one arrives
     });
 
     // Start breathing animation
     _breathingController.repeat();
+
+    // Collect events for saving
+    final collectedEvents = <ConversationEvent>[];
 
     try {
       final stream = widget.adkClient.sendMessageSSE(message);
@@ -131,6 +198,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
           setState(() {
             _events.add(event);
           });
+
+          // Collect events for persistence
+          _collectEventForPersistence(event, collectedEvents);
 
           // Extract final response and mindmap
           _processEvent(event);
@@ -154,7 +224,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
           });
           _breathingController.stop();
         },
-        onDone: () {
+        onDone: () async {
           if (!mounted) return;
           setState(() {
             _isLoading = false;
@@ -169,8 +239,22 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
               timestamp: DateTime.now(),
               hasMindmap: _mindmapData != null,
             ));
+
+            // Save assistant message to storage with mindmap if present
+            await widget.adkClient.addAssistantMessage(
+              _finalResponse,
+              hasMindmap: _mindmapData != null,
+              mindmapData: _mindmapData,
+              events: collectedEvents,
+            );
+
+            // If there's a mindmap, save it separately to storage
+            if (_mindmapData != null) {
+              await widget.adkClient.saveMindmap(_mindmapData!);
+              print('🗺️ Mindmap saved to storage');
+            }
           }
-          print('✅ SSE stream completed');
+          print('✅ SSE stream completed and conversation saved');
         },
       );
     } catch (e) {
@@ -181,6 +265,49 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       });
       _breathingController.stop();
     }
+  }
+
+  /// Collect SSE events for persistence
+  void _collectEventForPersistence(
+    SSEEvent event,
+    List<ConversationEvent> events,
+  ) {
+    final eventType = event.eventType;
+    String type;
+    String? name;
+    String? content;
+
+    switch (eventType) {
+      case SSEEventType.thinking:
+        type = 'thinking';
+        content = event.content.thoughtText;
+        break;
+      case SSEEventType.functionCall:
+        type = 'function_call';
+        final funcCall = event.content.parts
+            .firstWhere((p) => p.functionCall != null)
+            .functionCall;
+        name = funcCall?.name;
+        content = jsonEncode(funcCall?.args ?? {});
+        break;
+      case SSEEventType.functionResponse:
+        type = 'function_response';
+        final funcResp = event.content.parts
+            .firstWhere((p) => p.functionResponse != null)
+            .functionResponse;
+        name = funcResp?.name;
+        content = funcResp?.response;
+        break;
+      default:
+        return; // Don't save unknown or final response events
+    }
+
+    events.add(ConversationEvent(
+      type: type,
+      name: name,
+      content: content,
+      timestamp: event.timestamp,
+    ));
   }
 
   /// Handle sending a follow-up message
@@ -195,6 +322,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       timestamp: DateTime.now(),
     ));
 
+    // Save user message to storage
+    widget.adkClient.addUserMessage(message);
+
     // Clear input
     _chatController.clear();
 
@@ -204,6 +334,13 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
 
   /// Process an SSE event to extract response and mindmap
   void _processEvent(SSEEvent event) {
+    // Debug: Log all events to understand what's coming
+    print('📨 SSE Event: type=${event.eventType}, role=${event.content.role}');
+    print('   hasThought=${event.content.hasThought}, hasFunctionCall=${event.content.hasFunctionCall}');
+    if (event.content.hasThought) {
+      print('   💭 Thought: ${event.content.thoughtText.substring(0, event.content.thoughtText.length.clamp(0, 100))}...');
+    }
+    
     // Check for final response (non-thinking text from model)
     if (event.content.role == 'model' && event.content.mainText.isNotEmpty) {
       _finalResponse = event.content.mainText;
@@ -360,8 +497,29 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
 
     switch (eventType) {
       case SSEEventType.thinking:
-        // Thinking bubble - expandable with full content
-        return _buildThinkingBubble(event.content.thoughtText, index);
+        // Thinking bubble - show thought and optionally the associated tool call
+        final widgets = <Widget>[];
+        
+        // Add the thought bubble
+        widgets.add(_buildThinkingBubble(event.content.thoughtText, index));
+        
+        // If there's also a function call with this thought, show it too
+        if (event.hasAssociatedFunctionCall) {
+          final funcCallPart = event.content.parts.where((p) => p.functionCall != null).firstOrNull;
+          if (funcCallPart != null) {
+            widgets.add(_buildToolBubble(
+              icon: Icons.build_outlined,
+              title: 'Tool Call',
+              subtitle: funcCallPart.functionCall!.name,
+              color: const Color(0xFF2196F3),
+            ));
+          }
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: widgets,
+        );
 
       case SSEEventType.functionCall:
         // Tool call - just show the title
@@ -1194,27 +1352,96 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                             ),
                           ),
                           const SizedBox(height: 16),
-                          // Back to start button
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: const Row(
-                              children: [
-                                Icon(
-                                  Icons.arrow_back,
-                                  size: 24,
-                                  color: Colors.black,
+                          // Back to start button and session info
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.arrow_back,
+                                      size: 24,
+                                      color: Colors.black,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'New exploration',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'NouvelR',
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'New exploration',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: 'NouvelR',
-                                    color: Colors.black,
+                              ),
+                              const SizedBox(width: 24),
+                              // Session ID indicator
+                              if (widget.adkClient.session != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4CAF50)
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.save_outlined,
+                                        size: 14,
+                                        color: Color(0xFF4CAF50),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Session: ${widget.adkClient.session!.id.substring(0, 8)}...',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontFamily: 'NouvelR',
+                                          color: Color(0xFF4CAF50),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              if (widget.isRestoredSession)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2196F3)
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.restore,
+                                        size: 14,
+                                        color: Color(0xFF2196F3),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Restored',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontFamily: 'NouvelR',
+                                          color: Color(0xFF2196F3),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),
