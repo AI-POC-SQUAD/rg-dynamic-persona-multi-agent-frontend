@@ -719,10 +719,9 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   Widget _buildNewExplorationPanel() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(60, 48, 30, 48),
-      child: Center(
-        child: _buildNewExplorationCard(),
-      ),
+      margin: const EdgeInsets.fromLTRB(60, 96, 30, 96),
+      alignment: Alignment.topCenter,
+      child: _buildNewExplorationCard(),
     );
   }
 
