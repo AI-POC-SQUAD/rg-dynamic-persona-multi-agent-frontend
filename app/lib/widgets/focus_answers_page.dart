@@ -47,45 +47,18 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
   // Scroll controller for auto-scroll
   final ScrollController _scrollController = ScrollController();
 
-  // Breathing animation controller
+  // Animation controller for loading state
   late AnimationController _breathingController;
-  late Animation<double> _breathingAnimation;
-  late Animation<Color?> _colorAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize breathing animation
+    // Initialize animation controller
     _breathingController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
     );
-
-    _breathingAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _breathingController,
-      curve: Curves.easeInOut,
-    ));
-
-    _colorAnimation = TweenSequence<Color?>([
-      TweenSequenceItem(
-        tween: ColorTween(
-          begin: const Color(0xFFBF046B),
-          end: const Color(0xFFF26716),
-        ),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: ColorTween(
-          begin: const Color(0xFFF26716),
-          end: const Color(0xFFBF046B),
-        ),
-        weight: 50,
-      ),
-    ]).animate(_breathingController);
 
     // If this is a restored session, load the conversation history
     if (widget.isRestoredSession) {
@@ -419,28 +392,21 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
   }
 
   Widget _buildLoadingIndicator() {
-    return AnimatedBuilder(
-      animation: _breathingController,
-      builder: (context, child) {
-        return Container(
-          width: 60 + (_breathingAnimation.value * 10),
-          height: 60 + (_breathingAnimation.value * 10),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _colorAnimation.value?.withOpacity(0.3),
-          ),
-          child: Center(
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _colorAnimation.value,
-              ),
-            ),
-          ),
-        );
-      },
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/images/loader.gif',
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 
@@ -1155,11 +1121,21 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: _isLoading
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                      ? Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/loader.gif',
+                                width: 28,
+                                height: 28,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
                         )
                       : const Icon(
@@ -1612,7 +1588,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                     child: Row(
                       children: [
                         const Text(
-                          'CORPUS EXPLORER',
+                          'DYNAMIC PERSONA',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,

@@ -360,7 +360,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'CORPUS EXPLORER',
+                'DYNAMIC PERSONA',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -443,10 +443,21 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                   _loadSavedConversations();
                 },
                 icon: _isCreatingSession || _isLoadingConversations
-                    ? const SizedBox(
+                    ? Container(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/loader.gif',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       )
                     : const Icon(Icons.refresh),
                 tooltip: 'Refresh',
@@ -948,12 +959,23 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                 vertical: 14,
               ),
               suffixIcon: _isRestoringSession
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
+                  ? Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Container(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/loader.gif',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                     )
                   : IconButton(
@@ -1061,10 +1083,21 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
               IconButton(
                 onPressed: _loadSavedConversations,
                 icon: _isLoadingConversations
-                    ? const SizedBox(
+                    ? Container(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/loader.gif',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       )
                     : const Icon(Icons.refresh),
                 color: Colors.black54,
@@ -1111,13 +1144,28 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   Widget _buildConversationsList() {
     if (_isLoadingConversations) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Color(0xFFBF046B)),
-            SizedBox(height: 16),
-            Text(
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/loader.gif',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
               'Loading conversations...',
               style: TextStyle(
                 fontSize: 15,
