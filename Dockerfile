@@ -40,8 +40,8 @@ RUN mkdir -p /usr/share/nginx/html/config
 
 # Environment variables with sensible defaults
 ENV APP_PUBLIC_PATH="/"
-ENV BACKEND_BASE_URL="https://rg-dynamic-persona-auth-proxy-1036279278510.europe-west9.run.app"
-ENV IAP_MODE="true"
+ENV BACKEND_BASE_URL="https://rg-dynamic-persona-auth-proxy-1036279278510.europe-west4.run.app"
+ENV IAP_MODE="false"
 ENV IAP_AUDIENCE=""
 ENV USE_CORS_PROXY="false"
 

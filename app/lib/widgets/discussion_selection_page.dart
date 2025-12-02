@@ -4,6 +4,7 @@ import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:video_player/video_player.dart';
 import '../models/conversation.dart';
 import '../services/adk_api_client.dart';
@@ -22,7 +23,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _sessionIdController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  final ADKApiClient _adkClient = ADKApiClient();
+  late final ADKApiClient _adkClient;
   final FocusNode _focusNode = FocusNode();
 
   bool _isCreatingSession = false;
@@ -43,6 +44,11 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   @override
   void initState() {
     super.initState();
+    // Initialize ADK client with baseUrl from environment
+    final baseUrl = dotenv.env['BACKEND_BASE_URL'] ?? 'http://127.0.0.1:8000';
+    _adkClient = ADKApiClient(baseUrl: baseUrl);
+    print('🔗 ADK API Client initialized with baseUrl: $baseUrl');
+    
     _initializeBackgroundVideo();
     _initializeSession();
     _loadSavedConversations();
