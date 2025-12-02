@@ -5,7 +5,6 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:video_player/video_player.dart';
 import '../models/conversation.dart';
 import '../services/adk_api_client.dart';
 import '../utils/fade_page_route.dart';
@@ -37,10 +36,6 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   bool _showRestoreInput = false;
   String _searchQuery = '';
 
-  // Video player controller for background
-  late VideoPlayerController _videoController;
-  bool _isVideoInitialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -48,27 +43,10 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
     final baseUrl = dotenv.env['BACKEND_BASE_URL'] ?? 'http://127.0.0.1:8000';
     _adkClient = ADKApiClient(baseUrl: baseUrl);
     print('🔗 ADK API Client initialized with baseUrl: $baseUrl');
-    
-    _initializeBackgroundVideo();
+
     _initializeSession();
     _loadSavedConversations();
     _searchController.addListener(_onSearchChanged);
-  }
-
-  void _initializeBackgroundVideo() {
-    _videoController = VideoPlayerController.asset(
-      'assets/videos/background_animation.mp4',
-    );
-    _videoController.initialize().then((_) {
-      if (mounted) {
-        setState(() {
-          _isVideoInitialized = true;
-        });
-        _videoController.setLooping(true);
-        _videoController.setVolume(0);
-        _videoController.play();
-      }
-    });
   }
 
   void _onSearchChanged() {
@@ -289,7 +267,6 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   @override
   void dispose() {
-    _videoController.dispose();
     _topicController.dispose();
     _sessionIdController.dispose();
     _searchController.dispose();
@@ -306,19 +283,17 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
       backgroundColor: const Color(0xFFFFFFFF),
       body: Stack(
         children: [
-          // Background video aligned to bottom
-          if (_isVideoInitialized)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width /
-                    _videoController.value.aspectRatio,
-                child: VideoPlayer(_videoController),
-              ),
+          // Background image aligned to bottom
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: -250,
+            child: Image.asset(
+              'assets/images/background.png',
+              width: MediaQuery.of(context).size.width,
+              fit: BoxFit.contain,
             ),
+          ),
           // Dark overlay for better readability
           Positioned.fill(
             child: Container(

@@ -34,7 +34,7 @@ flutter:
   assets:
     - .env
     - assets/images/loader.gif
-    - assets/videos/background_animation.mp4
+    - assets/images/background.png
 
   # Custom fonts for the Orizon design (commented out until font files are available)
   fonts:
