@@ -35,6 +35,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   // UI state
   bool _showRestoreInput = false;
   String _searchQuery = '';
+  bool _isSavedConversationsExpanded = false;
 
   @override
   void initState() {
@@ -688,19 +689,275 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   }
 
   Widget _buildWideLayout() {
-    return Row(
+    return Stack(
       children: [
-        // Left panel - New Exploration
-        Expanded(
-          flex: 1,
-          child: _buildNewExplorationPanel(),
+        // Main content - New Exploration panel
+        AnimatedAlign(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: _isSavedConversationsExpanded
+              ? Alignment.centerLeft
+              : Alignment.center,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: _isSavedConversationsExpanded
+                ? MediaQuery.of(context).size.width * 0.45
+                : MediaQuery.of(context).size.width * 0.5,
+            margin: EdgeInsets.fromLTRB(
+              _isSavedConversationsExpanded ? 60 : 0,
+              96,
+              _isSavedConversationsExpanded ? 30 : 0,
+              96,
+            ),
+            alignment: Alignment.topCenter,
+            child: _buildNewExplorationCard(),
+          ),
         ),
-        // Right panel - Saved Conversations
-        Expanded(
-          flex: 1,
-          child: _buildSavedConversationsPanel(),
+        // History button (when collapsed)
+        if (!_isSavedConversationsExpanded)
+          Positioned(
+            top: 96,
+            right: 60,
+            child: _buildHistoryButton(),
+          ),
+        // Saved Conversations panel (when expanded)
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          top: 96,
+          bottom: 96,
+          right: _isSavedConversationsExpanded ? 60 : -500,
+          width: MediaQuery.of(context).size.width * 0.45,
+          child: IgnorePointer(
+            ignoring: !_isSavedConversationsExpanded,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _isSavedConversationsExpanded ? 1.0 : 0.0,
+              child: _buildSavedConversationsCardWithClose(),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHistoryButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _isSavedConversationsExpanded = true;
+          });
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.history,
+                size: 24,
+                color: Colors.grey.shade700,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'History',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'NouvelR',
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              if (_savedConversations.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFBF046B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_savedConversations.length}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'NouvelR',
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFBF046B),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSavedConversationsCardWithClose() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 40,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with close button
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Saved Conversations',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFBF046B).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_savedConversations.length}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'NouvelR',
+                              color: Color(0xFFBF046B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _savedConversations.isEmpty
+                          ? 'No conversations yet'
+                          : 'Click on a conversation to continue',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Close button
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _isSavedConversationsExpanded = false;
+                  });
+                },
+                icon: const Icon(Icons.close),
+                color: Colors.black54,
+                tooltip: 'Close',
+              ),
+              // Refresh button
+              IconButton(
+                onPressed: _loadSavedConversations,
+                icon: _isLoadingConversations
+                    ? Container(
+                        width: 20,
+                        height: 20,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/loader.gif',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : const Icon(Icons.refresh),
+                color: Colors.black54,
+                tooltip: 'Refresh conversations',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Search bar
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search conversations...',
+              hintStyle: const TextStyle(
+                fontFamily: 'NouvelR',
+                color: Colors.black38,
+              ),
+              prefixIcon: const Icon(Icons.search, color: Colors.black38),
+              filled: true,
+              fillColor: const Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+            style: const TextStyle(
+              fontSize: 15,
+              fontFamily: 'NouvelR',
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Conversations list
+          Expanded(
+            child: _buildConversationsList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -711,17 +968,147 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
         children: [
           _buildNewExplorationCard(),
           const SizedBox(height: 32),
-          _buildSavedConversationsCard(),
+          _buildSavedConversationsCardNarrow(),
         ],
       ),
     );
   }
 
-  Widget _buildNewExplorationPanel() {
+  Widget _buildSavedConversationsCardNarrow() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(60, 96, 30, 96),
-      alignment: Alignment.topCenter,
-      child: _buildNewExplorationCard(),
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 40,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Saved Conversations',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'NouvelR',
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFBF046B).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_savedConversations.length}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'NouvelR',
+                              color: Color(0xFFBF046B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _savedConversations.isEmpty
+                          ? 'No conversations yet'
+                          : 'Click on a conversation to continue',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontFamily: 'NouvelR',
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Refresh button
+              IconButton(
+                onPressed: _loadSavedConversations,
+                icon: _isLoadingConversations
+                    ? Container(
+                        width: 20,
+                        height: 20,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/loader.gif',
+                            width: 20,
+                            height: 20,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : const Icon(Icons.refresh),
+                color: Colors.black54,
+                tooltip: 'Refresh conversations',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Search bar
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search conversations...',
+              hintStyle: const TextStyle(
+                fontFamily: 'NouvelR',
+                color: Colors.black38,
+              ),
+              prefixIcon: const Icon(Icons.search, color: Colors.black38),
+              filled: true,
+              fillColor: const Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+            style: const TextStyle(
+              fontSize: 15,
+              fontFamily: 'NouvelR',
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Conversations list
+          _buildConversationsList(),
+        ],
+      ),
     );
   }
 
@@ -971,154 +1358,6 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildSavedConversationsPanel() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(30, 96, 60, 96),
-      child: _buildSavedConversationsCard(),
-    );
-  }
-
-  Widget _buildSavedConversationsCard() {
-    return Container(
-      height: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 40,
-            spreadRadius: 2,
-            offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Saved Conversations',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'NouvelR',
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFBF046B).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${_savedConversations.length}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'NouvelR',
-                              color: Color(0xFFBF046B),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _savedConversations.isEmpty
-                          ? 'No conversations yet'
-                          : 'Click on a conversation to continue',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Refresh button
-              IconButton(
-                onPressed: _loadSavedConversations,
-                icon: _isLoadingConversations
-                    ? Container(
-                        width: 20,
-                        height: 20,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/loader.gif',
-                            width: 20,
-                            height: 20,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.refresh),
-                color: Colors.black54,
-                tooltip: 'Refresh conversations',
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Search bar
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search conversations...',
-              hintStyle: const TextStyle(
-                fontFamily: 'NouvelR',
-                color: Colors.black38,
-              ),
-              prefixIcon: const Icon(Icons.search, color: Colors.black38),
-              filled: true,
-              fillColor: const Color(0xFFF5F5F5),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-            style: const TextStyle(
-              fontSize: 15,
-              fontFamily: 'NouvelR',
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Conversations list
-          Expanded(
-            child: _buildConversationsList(),
-          ),
-        ],
-      ),
     );
   }
 
