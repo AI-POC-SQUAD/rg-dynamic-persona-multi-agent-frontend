@@ -4,6 +4,7 @@ import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 import '../models/conversation.dart';
 import '../services/adk_api_client.dart';
 import '../utils/fade_page_route.dart';
@@ -35,12 +36,33 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   bool _showRestoreInput = false;
   String _searchQuery = '';
 
+  // Video player controller for background
+  late VideoPlayerController _videoController;
+  bool _isVideoInitialized = false;
+
   @override
   void initState() {
     super.initState();
+    _initializeBackgroundVideo();
     _initializeSession();
     _loadSavedConversations();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  void _initializeBackgroundVideo() {
+    _videoController = VideoPlayerController.asset(
+      'assets/videos/background_animation.mp4',
+    );
+    _videoController.initialize().then((_) {
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+        _videoController.setLooping(true);
+        _videoController.setVolume(0);
+        _videoController.play();
+      }
+    });
   }
 
   void _onSearchChanged() {
@@ -261,6 +283,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   @override
   void dispose() {
+    _videoController.dispose();
     _topicController.dispose();
     _sessionIdController.dispose();
     _searchController.dispose();
@@ -274,20 +297,43 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
     final isWideScreen = screenWidth > 1200;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            _buildHeader(),
-            // Main content
-            Expanded(
-              child: isWideScreen
-                  ? _buildWideLayout()
-                  : _buildNarrowLayout(),
+      backgroundColor: const Color(0xFFFFFFFF),
+      body: Stack(
+        children: [
+          // Background video aligned to bottom
+          if (_isVideoInitialized)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.width /
+                    _videoController.value.aspectRatio,
+                child: VideoPlayer(_videoController),
+              ),
             ),
-          ],
-        ),
+          // Dark overlay for better readability
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.0),
+            ),
+          ),
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                _buildHeader(),
+                // Main content
+                Expanded(
+                  child:
+                      isWideScreen ? _buildWideLayout() : _buildNarrowLayout(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -310,48 +356,26 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Logo and title
-          Row(
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFBF046B), Color(0xFFF26716)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.explore,
-                  color: Colors.white,
-                  size: 28,
+              Text(
+                'CORPUS EXPLORER',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
+                  letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(width: 16),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CORPUS EXPLORER',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  Text(
-                    'Knowledge Base & RAG Agent Interface',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontFamily: 'NouvelR',
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
+              Text(
+                'Knowledge Base & RAG Agent Interface',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black54,
+                ),
               ),
             ],
           ),
@@ -360,7 +384,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             children: [
               // Connection status
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _sessionId != null
                       ? const Color(0xFF4CAF50).withOpacity(0.1)
@@ -479,26 +504,27 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
     try {
       // Get export data from storage client
       final jsonData = _adkClient.storageClient.exportData();
-      
+
       // Create filename with timestamp
       final now = DateTime.now();
-      final timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+      final timestamp =
+          '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
       final filename = 'corpus_explorer_backup_$timestamp.json';
-      
+
       // Create blob and trigger download
       final bytes = utf8.encode(jsonData);
       final blob = html.Blob([bytes], 'application/json');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      
+
       final anchor = html.AnchorElement(href: url)
         ..setAttribute('download', filename)
         ..style.display = 'none';
-      
+
       html.document.body!.children.add(anchor);
       anchor.click();
       anchor.remove();
       html.Url.revokeObjectUrl(url);
-      
+
       _showSuccessSnackBar('Data saved to $filename');
       print('💾 Data exported to $filename');
     } catch (e) {
@@ -512,23 +538,23 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
     final input = html.FileUploadInputElement()
       ..accept = '.json'
       ..style.display = 'none';
-    
+
     html.document.body!.children.add(input);
-    
+
     input.onChange.listen((event) async {
       final files = input.files;
       if (files == null || files.isEmpty) {
         input.remove();
         return;
       }
-      
+
       final file = files[0];
       final reader = html.FileReader();
-      
+
       reader.onLoadEnd.listen((event) {
         try {
           final content = reader.result as String;
-          
+
           // Show confirmation dialog
           _showLoadConfirmationDialog(content, file.name);
         } catch (e) {
@@ -537,15 +563,15 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
         }
         input.remove();
       });
-      
+
       reader.onError.listen((event) {
         _showErrorSnackBar('Error reading file');
         input.remove();
       });
-      
+
       reader.readAsText(file);
     });
-    
+
     input.click();
   }
 
@@ -555,10 +581,11 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
     Map<String, dynamic>? parsedData;
     int conversationCount = 0;
     int mindmapCount = 0;
-    
+
     try {
       parsedData = jsonDecode(jsonContent) as Map<String, dynamic>;
-      final conversations = parsedData['conversations'] as Map<String, dynamic>?;
+      final conversations =
+          parsedData['conversations'] as Map<String, dynamic>?;
       final mindmaps = parsedData['mindmaps'] as Map<String, dynamic>?;
       conversationCount = conversations?.length ?? 0;
       mindmapCount = mindmaps?.length ?? 0;
@@ -566,14 +593,15 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
       _showErrorSnackBar('Invalid backup file format');
       return;
     }
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 28),
+            Icon(Icons.warning_amber_rounded,
+                color: Colors.orange.shade700, size: 28),
             const SizedBox(width: 12),
             const Text('Load Backup?'),
           ],
@@ -640,7 +668,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   /// Actually perform the data load after confirmation
   void _performDataLoad(String jsonContent) {
     final success = _adkClient.storageClient.importData(jsonContent);
-    
+
     if (success) {
       _showSuccessSnackBar('Data loaded successfully! Refreshing...');
       // Reload conversations list
@@ -672,12 +700,12 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
       children: [
         // Left panel - New Exploration
         Expanded(
-          flex: 2,
+          flex: 1,
           child: _buildNewExplorationPanel(),
         ),
         // Right panel - Saved Conversations
         Expanded(
-          flex: 3,
+          flex: 1,
           child: _buildSavedConversationsPanel(),
         ),
       ],
@@ -699,22 +727,30 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   Widget _buildNewExplorationPanel() {
     return Container(
-      margin: const EdgeInsets.all(24),
-      child: _buildNewExplorationCard(),
+      margin: const EdgeInsets.fromLTRB(60, 48, 30, 48),
+      child: Center(
+        child: _buildNewExplorationCard(),
+      ),
     );
   }
 
   Widget _buildNewExplorationCard() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 40,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -723,49 +759,25 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Row(
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFBF046B), Color(0xFFF26716)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.add_circle_outline,
-                  color: Colors.white,
-                  size: 32,
+              Text(
+                'New Exploration',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(width: 20),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'New Exploration',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Start a new conversation with the RAG agent',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontFamily: 'NouvelR',
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
+              SizedBox(height: 4),
+              Text(
+                'Start a new conversation with the RAG agent',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontFamily: 'NouvelR',
+                  color: Colors.black54,
                 ),
               ),
             ],
@@ -789,7 +801,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             maxLines: 3,
             minLines: 1,
             decoration: InputDecoration(
-              hintText: 'e.g., "Explore car_data_usage namespace" or "What do eco-conscious customers want?"',
+              hintText:
+                  'e.g., "Explore car_data_usage namespace" or "What do eco-conscious customers want?"',
               hintStyle: const TextStyle(
                 fontFamily: 'NouvelR',
                 color: Colors.black38,
@@ -851,7 +864,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
           // Divider
           Row(
             children: [
-              Expanded(child: Container(height: 1, color: Colors.grey.shade200)),
+              Expanded(
+                  child: Container(height: 1, color: Colors.grey.shade200)),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
@@ -863,7 +877,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                   ),
                 ),
               ),
-              Expanded(child: Container(height: 1, color: Colors.grey.shade200)),
+              Expanded(
+                  child: Container(height: 1, color: Colors.grey.shade200)),
             ],
           ),
           const SizedBox(height: 24),
@@ -942,7 +957,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                       ),
                     )
                   : IconButton(
-                      icon: const Icon(Icons.arrow_forward, color: Color(0xFF2196F3)),
+                      icon: const Icon(Icons.arrow_forward,
+                          color: Color(0xFF2196F3)),
                       onPressed: _handleRestoreFromInput,
                     ),
             ),
@@ -958,7 +974,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
 
   Widget _buildSavedConversationsPanel() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 24, 24, 24),
+      margin: const EdgeInsets.fromLTRB(30, 96, 60, 96),
       child: _buildSavedConversationsCard(),
     );
   }
@@ -966,15 +982,21 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
   Widget _buildSavedConversationsCard() {
     return Container(
       height: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 40,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -984,20 +1006,6 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
           // Header
           Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFBF046B).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.folder_special,
-                  color: Color(0xFFBF046B),
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1211,9 +1219,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isRecent
-                  ? const Color(0xFFFFF8F5)
-                  : const Color(0xFFF8F8F8),
+              color:
+                  isRecent ? const Color(0xFFFFF8F5) : const Color(0xFFF8F8F8),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isRecent
@@ -1337,7 +1344,8 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50).withOpacity(0.15),
+                                color:
+                                    const Color(0xFF4CAF50).withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Row(

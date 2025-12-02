@@ -142,8 +142,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
           }
         }
 
-        print(
-            '✅ Restored ${_chatHistory.length} messages from conversation');
+        print('✅ Restored ${_chatHistory.length} messages from conversation');
       }
 
       setState(() {
@@ -160,8 +159,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
   /// Start the SSE exploration with initial topic
   Future<void> _startExploration() async {
     // Format the initial message with a prefix for the agent
-    final formattedMessage = 'I would like to explore the subject: ${widget.topic}';
-    
+    final formattedMessage =
+        'I would like to explore the subject: ${widget.topic}';
+
     // Add initial query to chat history (show only the topic to user for cleaner UI)
     _chatHistory.add(ChatMessage(
       role: MessageRole.user,
@@ -340,11 +340,13 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
   void _processEvent(SSEEvent event) {
     // Debug: Log all events to understand what's coming
     print('📨 SSE Event: type=${event.eventType}, role=${event.content.role}');
-    print('   hasThought=${event.content.hasThought}, hasFunctionCall=${event.content.hasFunctionCall}');
+    print(
+        '   hasThought=${event.content.hasThought}, hasFunctionCall=${event.content.hasFunctionCall}');
     if (event.content.hasThought) {
-      print('   💭 Thought: ${event.content.thoughtText.substring(0, event.content.thoughtText.length.clamp(0, 100))}...');
+      print(
+          '   💭 Thought: ${event.content.thoughtText.substring(0, event.content.thoughtText.length.clamp(0, 100))}...');
     }
-    
+
     // Check for final response (non-thinking text from model)
     if (event.content.role == 'model' && event.content.mainText.isNotEmpty) {
       _finalResponse = event.content.mainText;
@@ -503,13 +505,15 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       case SSEEventType.thinking:
         // Thinking bubble - show thought and optionally the associated tool call
         final widgets = <Widget>[];
-        
+
         // Add the thought bubble
         widgets.add(_buildThinkingBubble(event.content.thoughtText, index));
-        
+
         // If there's also a function call with this thought, show it too
         if (event.hasAssociatedFunctionCall) {
-          final funcCallPart = event.content.parts.where((p) => p.functionCall != null).firstOrNull;
+          final funcCallPart = event.content.parts
+              .where((p) => p.functionCall != null)
+              .firstOrNull;
           if (funcCallPart != null) {
             widgets.add(_buildToolBubble(
               icon: Icons.build_outlined,
@@ -519,7 +523,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             ));
           }
         }
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: widgets,
@@ -567,9 +571,9 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
     } else if (preview.length > 120) {
       preview = '${preview.substring(0, 120)}...';
     }
-    
+
     final isLongContent = content.length > 120 || content.contains('\n');
-    
+
     return StatefulBuilder(
       builder: (context, setLocalState) {
         return Container(
@@ -595,7 +599,8 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
               // Thought content
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: const Color(0xFF9C27B0).withOpacity(0.06),
                     borderRadius: BorderRadius.circular(14),
@@ -632,7 +637,8 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontFamily: 'NouvelR',
-                                    color: const Color(0xFF9C27B0).withOpacity(0.8),
+                                    color: const Color(0xFF9C27B0)
+                                        .withOpacity(0.8),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -640,7 +646,8 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                                 Icon(
                                   Icons.open_in_new,
                                   size: 12,
-                                  color: const Color(0xFF9C27B0).withOpacity(0.8),
+                                  color:
+                                      const Color(0xFF9C27B0).withOpacity(0.8),
                                 ),
                               ],
                             ),
@@ -1021,18 +1028,18 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
   /// Send a suggestion message programmatically
   void _sendSuggestion(String message) {
     if (_isLoading) return;
-    
+
     // Add to chat history
     _chatHistory.add(ChatMessage(
       role: MessageRole.user,
       content: message,
       timestamp: DateTime.now(),
     ));
-    
+
     // Save and send
     widget.adkClient.addUserMessage(message);
     _sendMessage(message);
-    
+
     // Force scroll to bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -1047,7 +1054,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
 
   Widget _buildChatInputBar() {
     final hasMindmap = _mindmapData != null;
-    
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
       decoration: BoxDecoration(
@@ -1088,80 +1095,82 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                   _buildSuggestionChip(
                     icon: Icons.manage_search,
                     label: 'Search deeper',
-                    onTap: () => _sendSuggestion('Continue to search into another source of data.'),
+                    onTap: () => _sendSuggestion(
+                        'Continue to search into another source of data.'),
                   ),
                 ],
               ),
             ),
           // Chat input row
           Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _chatController,
-              focusNode: _chatFocusNode,
-              enabled: !_isLoading,
-              onSubmitted: (_) => _handleSendMessage(),
-              decoration: InputDecoration(
-                hintText: _isLoading
-                    ? 'Waiting for response...'
-                    : 'Continue the conversation...',
-                hintStyle: const TextStyle(
-                  fontFamily: 'NouvelR',
-                  color: Colors.black38,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF5F5F5),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFBF046B),
-                    width: 2,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _chatController,
+                  focusNode: _chatFocusNode,
+                  enabled: !_isLoading,
+                  onSubmitted: (_) => _handleSendMessage(),
+                  decoration: InputDecoration(
+                    hintText: _isLoading
+                        ? 'Waiting for response...'
+                        : 'Continue the conversation...',
+                    hintStyle: const TextStyle(
+                      fontFamily: 'NouvelR',
+                      color: Colors.black38,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFBF046B),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'NouvelR',
                   ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: _isLoading ? null : _handleSendMessage,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _isLoading
+                        ? Colors.grey.shade300
+                        : const Color(0xFFBF046B),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: _isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                 ),
               ),
-              style: const TextStyle(
-                fontSize: 18,
-                fontFamily: 'NouvelR',
-              ),
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: _isLoading ? null : _handleSendMessage,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color:
-                    _isLoading ? Colors.grey.shade300 : const Color(0xFFBF046B),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: _isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-            ),
-          ),
-        ],
-      ),
         ],
       ),
     );
@@ -1175,7 +1184,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
     bool isDisabled = false,
   }) {
     final color = isDisabled ? Colors.grey.shade400 : Colors.grey.shade600;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1184,9 +1193,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: isDisabled 
-                ? Colors.grey.shade100 
-                : Colors.grey.shade100,
+            color: isDisabled ? Colors.grey.shade100 : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDisabled ? Colors.grey.shade200 : Colors.grey.shade300,
@@ -1196,12 +1203,12 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 14, color: color),
+              Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   fontFamily: 'NouvelR',
                   color: color,
                   fontWeight: FontWeight.w500,
@@ -1464,58 +1471,19 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Mindmap info header
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.account_tree,
-                    color: Color(0xFF4CAF50), size: 24),
-                const SizedBox(width: 12),
-                Text(
-                  'Mindmap: ${_mindmapData!['nodes']?.length ?? 0} nodes, ${_mindmapData!['edges']?.length ?? 0} edges',
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'NouvelR',
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
           // Mindmap widget
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: MindMapWidget(
                   jsonData: jsonString,
                   layoutType: MindMapLayoutType.bidirectional,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.transparent,
                   edgeColor: const Color(0xFF535450),
                   animationDuration: const Duration(seconds: 2),
                   allowNodeOverlap: false,
@@ -1542,7 +1510,8 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
 
   /// Calculate nodes that should be initially expanded up to a given depth.
   /// Depth 0 = root only, depth 1 = root + children, depth 2 = root + children + grandchildren
-  Set<String> _getNodesUpToDepth(Map<String, dynamic> mindmapData, int maxDepth) {
+  Set<String> _getNodesUpToDepth(
+      Map<String, dynamic> mindmapData, int maxDepth) {
     final expandedIds = <String>{};
     final nodes = mindmapData['nodes'] as List<dynamic>?;
     final edges = mindmapData['edges'] as List<dynamic>?;
@@ -1608,13 +1577,13 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
             // Compact header - single row with all controls
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
+                    blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -1645,11 +1614,11 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                         const Text(
                           'CORPUS EXPLORER',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 24,
                             fontWeight: FontWeight.w700,
                             fontFamily: 'NouvelR',
                             color: Colors.black,
-                            letterSpacing: 0.5,
+                            letterSpacing: 1.2,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1743,7 +1712,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                               children: [
                                 Icon(
                                   Icons.chat_outlined,
-                                  size: 16,
+                                  size: 18,
                                   color: _currentTab == 0
                                       ? const Color(0xFFBF046B)
                                       : Colors.grey.shade500,
@@ -1752,7 +1721,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                                 Text(
                                   'Chat',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 15,
                                     fontFamily: 'NouvelR',
                                     fontWeight: _currentTab == 0
                                         ? FontWeight.w600
@@ -1813,7 +1782,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                               children: [
                                 Icon(
                                   Icons.account_tree_outlined,
-                                  size: 16,
+                                  size: 18,
                                   color: _currentTab == 1
                                       ? const Color(0xFFBF046B)
                                       : Colors.grey.shade500,
@@ -1822,7 +1791,7 @@ class _FocusAnswersPageState extends State<FocusAnswersPage>
                                 Text(
                                   'Mindmap',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 15,
                                     fontFamily: 'NouvelR',
                                     fontWeight: _currentTab == 1
                                         ? FontWeight.w600

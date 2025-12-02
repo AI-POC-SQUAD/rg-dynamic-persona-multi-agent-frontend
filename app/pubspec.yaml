@@ -16,6 +16,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_dotenv: ^5.1.0
   flutter_markdown_plus: ^1.0.5
+  video_player: ^2.9.2
   flutter_mindmap:
     git:
       url: https://github.com/FrenchPOC/flutter_mindmap.git
@@ -32,16 +33,7 @@ flutter:
   # Add assets here for the new Orizon UI
   assets:
     - .env
-    - assets/images/persona_0.png
-    - assets/images/persona_1.png
-    - assets/images/persona_2.png
-    - assets/images/persona_3.png
-    - assets/images/persona_4.png
-    - assets/images/sphere_0.png
-    - assets/images/sphere_1.png
-    - assets/images/sphere_2.png
-    - assets/images/sphere_3.png
-    - assets/images/sphere_4.png
+    - assets/videos/background_animation.mp4
 
   # Custom fonts for the Orizon design (commented out until font files are available)
   fonts:
