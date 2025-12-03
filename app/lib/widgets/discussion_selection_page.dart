@@ -1281,7 +1281,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
             children: [
               Icon(
                 _showRestoreInput ? Icons.expand_less : Icons.expand_more,
-                color: const Color(0xFF2196F3),
+                color: const Color(0xFFBF046B),
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -1291,7 +1291,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'NouvelR',
-                  color: Color(0xFF2196F3),
+                  color: Color(0xFFBF046B),
                 ),
               ),
             ],
@@ -1309,7 +1309,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                 color: Colors.black38,
               ),
               filled: true,
-              fillColor: const Color(0xFFF0F7FF),
+              fillColor: const Color(0xFFFDF6FB),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -1317,7 +1317,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(
-                  color: Color(0xFF2196F3),
+                  color: Color(0xFFBF046B),
                   width: 2,
                 ),
               ),
@@ -1347,7 +1347,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                     )
                   : IconButton(
                       icon: const Icon(Icons.arrow_forward,
-                          color: Color(0xFF2196F3)),
+                          color: Color(0xFFBF046B)),
                       onPressed: _handleRestoreFromInput,
                     ),
             ),
@@ -1503,20 +1503,14 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    gradient: conv.hasMindmap
-                        ? const LinearGradient(
-                            colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : LinearGradient(
-                            colors: [
-                              const Color(0xFFBF046B).withOpacity(0.8),
-                              const Color(0xFFF26716).withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFBF046B).withOpacity(0.8),
+                        const Color(0xFFF26716).withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
@@ -1612,7 +1606,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                               ),
                               decoration: BoxDecoration(
                                 color:
-                                    const Color(0xFF4CAF50).withOpacity(0.15),
+                                    const Color(0xFFBF046B).withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Row(
@@ -1621,7 +1615,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                                   Icon(
                                     Icons.account_tree,
                                     size: 12,
-                                    color: Color(0xFF4CAF50),
+                                    color: Color(0xFFBF046B),
                                   ),
                                   SizedBox(width: 4),
                                   Text(
@@ -1630,7 +1624,7 @@ class _DiscussionSelectionPageState extends State<DiscussionSelectionPage> {
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                       fontFamily: 'NouvelR',
-                                      color: Color(0xFF4CAF50),
+                                      color: Color(0xFFBF046B),
                                     ),
                                   ),
                                 ],
